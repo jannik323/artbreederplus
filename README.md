@@ -1,6 +1,6 @@
 # artbreederplus
 
-Browser addon that expands and enhances the webpage artbreeder.com.
+Browser addon that expands and enhances the webpage https://artbreeder.com.
 https://addons.mozilla.org/en-US/firefox/addon/ab-plus/
 for more information.
 
