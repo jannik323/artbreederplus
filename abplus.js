@@ -1,7 +1,34 @@
+let defaultsettings = {
+    displaylikes:true,
+    darkmode:true,
+    darkmodecolor:"#222222",
+}
 
+// clear old localstorage entries
+{
+    let dm = localStorage.getItem("darkmode");
+    if(dm){
+        console.log("old localStorage data detected ! Transferring to new one")
+        absettings("darkmode",true,JSON.parse(dm));
+        localStorage.removeItem("darkmode");
+    }
+    let dmc = localStorage.getItem("darkmode-color");
+    if(dmc){
+        console.log("old localStorage data detected ! Transferring to new one")
+        absettings("darkmodecolor",true,JSON.parse(dmc));
+        localStorage.removeItem("darkmode-color");
+    }
+}
+
+if(absettings("darkmode")){
+    enabledarkmode();
+}
+
+let USER;
+{
 let urlsplit = window.location.pathname.split("/");
-const USER = urlsplit[urlsplit.length-1];
-let select = false;
+USER = urlsplit[urlsplit.length-1];
+}
 
 class Imageobserver {
 
@@ -9,13 +36,14 @@ class Imageobserver {
         this.size=0;
         this.imagecontainer=null;
         this.checkloop;
-
+        this.likechecksize=0;
+        this.likecheckoffset=0;
+        this.displaylikes=absettings("displaylikes");
     }
 
     startcheck(){
-        this.checkloop = setInterval(checkimagechange, 500);
+        setTimeout(() => {this.checkloop = setInterval(checkimagechange, 100)}, 200);
         removeblockedimgs();
-        // removeblockednotif();
         addclickEvent();
     }
 
@@ -26,31 +54,32 @@ class Imageobserver {
     
     check(){
         if(this.imagecontainer.childNodes.length!==this.size){
+            if(this.imagecontainer.childNodes.length<this.size||this.size<40){
+                this.likechecksize=this.imagecontainer.childNodes.length;
+                this.likecheckoffset=0;
+            }else{
+                this.likechecksize=this.imagecontainer.childNodes.length-this.size;
+                this.likecheckoffset=this.imagecontainer.childNodes.length-this.likechecksize-2;
+                if(this.size==0){this.likecheckoffset=0}
+            }
             this.size=this.imagecontainer.childNodes.length;
             return true;
         }
         return false;
     }
 }
-let imageobserver = new Imageobserver();
 function checkimagechange(){
     if(imageobserver.check()){
         removeblockedimgs();
-        // removeblockednotif();
         addclickEvent();
+        if(imageobserver.displaylikes){
+            getlikes();
+        }
     }
 }
 
-if(JSON.parse(localStorage.getItem("darkmode"))){
-    enabledarkmode();
-}
-
-if(USER=="test"){
-    speeeen();
-}
-
-setTimeout(()=>{start(true)},500);
-
+let imageobserver = new Imageobserver();
+start();
 
 function addclickEvent(){
     let imageContainer = imageobserver.imagecontainer;
@@ -61,7 +90,6 @@ function addclickEvent(){
             images[i].addEventListener("click",e=>{
                 if(e.altKey){
                     images[i].classList.toggle("selected");
-                    
                 }
             })
         }
@@ -83,11 +111,10 @@ function removeblockedimgs(){
         }
         let imgowner = images[i].lastChild.lastChild.firstChild.firstChild.innerText;
         if(savedblock.includes(imgowner)){
-            images[i].remove();
+            images[i].style.display =" none";
             deletecount++;
         }
     }
-    console.log("blocked "+ deletecount+ " images");
     let blocks = JSON.parse(localStorage.getItem("abplus-blockedimgs"));
     if(blocks!=null){deletecount+=blocks}
     localStorage.setItem("abplus-blockedimgs",JSON.stringify(deletecount));
@@ -107,7 +134,39 @@ function removeblockedimgs(){
 //     }
 // }
 
-function addextras() {
+function absettings(attribute="all",set=false,value=false){
+    let settings =  JSON.parse(localStorage.getItem("abplus-settings"));
+    if(!settings){
+        console.log("first time?")
+        settings = defaultsettings;
+        localStorage.setItem("abplus-settings",JSON.stringify(settings));
+    }
+    if(Object.keys(defaultsettings).length!=Object.keys(settings).length){
+        console.log("updated")
+        for (let p in defaultsettings) {
+            settings[p] = settings[p]??defaultsettings[p]; 
+        }
+        for (let p in settings) {
+            if(defaultsettings[p]==undefined){
+                delete settings[p];
+            }
+        }
+        localStorage.setItem("abplus-settings",JSON.stringify(settings));
+    }
+    if(set){
+        settings[attribute] = value;
+        localStorage.setItem("abplus-settings",JSON.stringify(settings));
+    }else{
+        if(attribute==="all"){
+            return settings;
+        }
+        return settings[attribute];
+    }
+
+}
+
+
+function start() {
 
     //defaulting localstorage
     if(localStorage.getItem("abplus-blocked")==null){
@@ -120,13 +179,14 @@ function addextras() {
 
     //burger menu btn
     let dropdown = document.querySelector("div.dropdown-content");
-    if(dropdown==null){
-        dropdown = document.querySelector("div.header-right");
-        if(dropdown==null)return;
-    };
     let btn = document.createElement("a");
     btn.innerText = "AB+ Settings";
     btn.href = "/artbreederplus";
+    if(dropdown==null){
+        dropdown = document.querySelector("div.header-right");
+        btn.classList.add("header_option");
+        if(dropdown==null)return;
+    };
     
     dropdown.insertBefore(btn,dropdown.childNodes[0]);
     //
@@ -162,211 +222,249 @@ function addextras() {
     sheet.insertRule(".Xsomething::after{content: url(/svg/x_s1.svg);width: 100%;height: 100%;scale: 2.5;justify-content: center;align-items: center;display: flex;}", sheet.cssRules.length);   
 
 
-
+    // ab+ page
     if(USER=="artbreederplus"){
         let abplustitle = document.querySelector(".row.title_row h1");
         if(abplustitle!=null){
             abplustitle.innerText ="Artbreeder+ Settings";
         }
-
-
         //first card
-        let div = document.createElement("div");
-        div.classList.add("row");
-        div.classList.add("title_row");
-        let card = document.createElement("div");
-        card.classList.add("row_element");
-        card.classList.add("card");
-        div.appendChild(card);
-        
-        //change color
-        let input = document.createElement("input");
-        input.type="color";
-        input.value="#222222";
-        if(JSON.parse(localStorage.getItem("darkmode-color"))){
-            input.value = JSON.parse(localStorage.getItem("darkmode-color"))
+        {
+            let div = document.createElement("div");
+            div.classList.add("row");
+            div.classList.add("title_row");
+            let card = document.createElement("div");
+            card.classList.add("row_element");
+            card.classList.add("card");
+            div.appendChild(card);
+            
+            //change color
+            let input = document.createElement("input");
+            input.type="color";
+            input.value="#222222";
+            input.value = absettings("darkmodecolor");
+            input.addEventListener("change",e=>{
+                absettings("darkmodecolor",true,e.target.value);
+                let element = document.getElementById("darkmodestylesheet");
+                let sheet = element.sheet;
+                sheet.cssRules[3].style.background = e.target.value;
+                sheet.cssRules[5].style.background = shadeColor(e.target.value,-70);
+                let isokay = confirm("Do you want to overwrite the website link on your profile page in order to share your color theme with other visitors ?");
+                if(isokay){addcolorsafe(e.target.value);}
+            })
+
+            let text = document.createElement("span");
+            text.innerText="custom darkmode color: ";
+            let title = document.createElement("h3");
+            title.innerText ="Darkmode Settings";
+            title.style.marginTop ="0px";
+            let reset = document.createElement("button");
+            reset.classList.add("primary_button");
+            reset.innerText = "Reset";
+            reset.addEventListener("click",()=>{
+                let color = "#222222"
+                input.value=color;
+                absettings("darkmodecolor",true,color);
+                let element = document.getElementById("darkmodestylesheet");
+                let sheet = element.sheet;
+                sheet.cssRules[3].style.background = color;
+                sheet.cssRules[5].style.background = shadeColor(color,-70);
+                let isokay = confirm("Do you want to overwrite the website link on your profile page in order to share your color theme with other visitors ?");
+                if(isokay){addcolorsafe(color);}
+            })
+
+            //toggle darkmode
+
+            let ison = absettings("darkmode");
+            let check = document.createElement("input");
+            check.style.cursor="pointer";
+            check.type = "checkbox";
+            check.id = "darkmode-check-menu";
+            check.checked = ison;
+            check.addEventListener("change",(e)=>{
+                absettings("darkmode",true,e.target.checked);
+                ison=e.target.checked;
+                if(ison){
+                    enabledarkmode();
+                }else{
+                    disabledarkmode();
+                }
+            });
+            let label = document.createElement("label");
+            label.innerText = "Darkmode";
+            label.setAttribute("for","darkmode-check-menu");
+            
+
+            card.appendChild(title);
+            card.appendChild(document.createElement("hr"));
+            
+            card.appendChild(label);
+            card.appendChild(check);
+            card.appendChild(document.createElement("br"));
+            card.appendChild(document.createElement("br"));
+
+            card.appendChild(text);
+            card.appendChild(input);
+            
+
+            card.appendChild(document.createElement("br"));
+            card.appendChild(document.createElement("br"));
+            
+            card.appendChild(document.createElement("hr"));
+            card.appendChild(document.createElement("br"));
+            card.appendChild(reset);
+
+            document.body.insertBefore(div,document.body.childNodes[5]);
+            document.body.insertBefore(document.createElement("br"),document.body.childNodes[6]);
         }
-        input.addEventListener("change",e=>{
-            localStorage.setItem("darkmode-color",JSON.stringify(e.target.value));
-            let element = document.getElementById("darkmodestylesheet");
-            let sheet = element.sheet;
-            sheet.cssRules[3].style.background = e.target.value;
-            sheet.cssRules[5].style.background = shadeColor(e.target.value,-70);
-            let isokay = confirm("Do you want to overwrite the website link on your profile page in order to share your color theme with other visitors ?");
-            if(isokay){addcolorsafe(e.target.value);}
-        })
-
-        let text = document.createElement("span");
-        text.innerText="custom darkmode color: ";
-        let title = document.createElement("h3");
-        title.innerText ="Darkmode Settings";
-        title.style.marginTop ="0px";
-        let reset = document.createElement("button");
-        reset.classList.add("primary_button");
-        reset.innerText = "Reset";
-        reset.addEventListener("click",()=>{
-            let color = "#222222"
-            input.value=color;
-            localStorage.setItem("darkmode-color",JSON.stringify(color));
-            let element = document.getElementById("darkmodestylesheet");
-            let sheet = element.sheet;
-            sheet.cssRules[3].style.background = color;
-            sheet.cssRules[5].style.background = shadeColor(color,-70);
-            let isokay = confirm("Do you want to overwrite the website link on your profile page in order to share your color theme with other visitors ?");
-            if(isokay){addcolorsafe(color);}
-        })
-
-        //toggle darkmode
-
-        let ison = JSON.parse(localStorage.getItem("darkmode"));
-        if(ison==null){
-            ison=false;
-            localStorage.setItem("darkmode",JSON.stringify(ison));
-        }
-        let check = document.createElement("input");
-        check.style.cursor="pointer";
-        check.type = "checkbox";
-        check.id = "darkmode-check-menu";
-        check.checked = ison;
-        check.addEventListener("change",(e)=>{
-            localStorage.setItem("darkmode",JSON.stringify(e.target.checked));
-            ison=e.target.checked;
-            if(ison){
-                enabledarkmode();
-            }else{
-                disabledarkmode();
-            }
-        });
-        let label = document.createElement("label");
-        label.innerText = "Darkmode";
-        label.setAttribute("for","darkmode-check-menu");
-        
-
-        card.appendChild(title);
-        card.appendChild(document.createElement("hr"));
-        
-        card.appendChild(label);
-        card.appendChild(check);
-        card.appendChild(document.createElement("br"));
-        card.appendChild(document.createElement("br"));
-
-        card.appendChild(text);
-        card.appendChild(input);
-        
-
-        card.appendChild(document.createElement("br"));
-        card.appendChild(document.createElement("br"));
-        
-        card.appendChild(document.createElement("hr"));
-        card.appendChild(document.createElement("br"));
-        card.appendChild(reset);
-
-        document.body.insertBefore(div,document.body.childNodes[5]);
-        document.body.insertBefore(document.createElement("br"),document.body.childNodes[6]);
-
         // 2nd card
+        {
+            let div = document.createElement("div");
+            div.classList.add("row");
+            div.classList.add("title_row");
+            let card = document.createElement("div");
+            card.classList.add("row_element");
+            card.classList.add("card");
+            div.appendChild(card);
 
-        div = document.createElement("div");
-        div.classList.add("row");
-        div.classList.add("title_row");
-        card = document.createElement("div");
-        card.classList.add("row_element");
-        card.classList.add("card");
-        div.appendChild(card);
+            let title = document.createElement("h3");
+            title.innerText ="Block Settings";
+            title.style.marginTop ="0px";
+            
+            let blockedusertitle = document.createElement("h4");
+            blockedusertitle.innerText = "Blocked Users";
 
-        title = document.createElement("h3");
-        title.innerText ="Block Settings";
-        title.style.marginTop ="0px";
-        
-        let blockedusertitle = document.createElement("h4");
-        blockedusertitle.innerText = "Blocked Users";
+            let list = document.createElement("ul");
+            list.style.height =" 200px";
+            list.style.overflowY = "auto";
+            let blocked = JSON.parse(localStorage.getItem("abplus-blocked"));
+            blocked.forEach(block => {
+                addblockelement(block, list);
+            });
 
-        let list = document.createElement("ul");
-        list.style.height =" 200px";
-        list.style.overflowY = "auto";
-        let blocked = JSON.parse(localStorage.getItem("abplus-blocked"));
-        blocked.forEach(block => {
-            addblockelement(block, list);
-        });
-
-        let blockdiv = document.createElement("div");
-        blockdiv.style.display = "flex";
-        blockdiv.style.justifyContent = "center";
-        blockdiv.style.alignItems = "center";
-        let blockfield = document.createElement("input");
-        blockfield.type = "text";
-        blockfield.placeholder = "user name";
-        let blockbtn = document.createElement("button");
-        blockbtn.innerText = "Block User";
-        blockbtn.classList.add("primary_button");
-        blockbtn.addEventListener("click",()=>{
-            if(!blockfield.value){
-                alert("please enter a valid user name !");
-                return;
-            }
-            let blocked = [];
-            let savedblock = JSON.parse(localStorage.getItem("abplus-blocked"));
-            if(savedblock!=null){blocked=savedblock}
-            if(blocked.includes(blockfield.value)){
-                alert("user is already blocked!");
-                return;
-            }
-            blocked.push(blockfield.value);
-            localStorage.setItem("abplus-blocked",JSON.stringify(blocked));
-            addblockelement(blockfield.value,list);
-            blockfield.value="";
-        })
-        blockdiv.appendChild(blockfield);
-        blockdiv.appendChild(blockbtn);
+            let blockdiv = document.createElement("div");
+            blockdiv.style.display = "flex";
+            blockdiv.style.justifyContent = "center";
+            blockdiv.style.alignItems = "center";
+            let blockfield = document.createElement("input");
+            blockfield.type = "text";
+            blockfield.placeholder = "user name";
+            let blockbtn = document.createElement("button");
+            blockbtn.innerText = "Block User";
+            blockbtn.classList.add("primary_button");
+            blockbtn.addEventListener("click",()=>{
+                if(!blockfield.value){
+                    alert("please enter a valid user name !");
+                    return;
+                }
+                let blocked = [];
+                let savedblock = JSON.parse(localStorage.getItem("abplus-blocked"));
+                if(savedblock!=null){blocked=savedblock}
+                if(blocked.includes(blockfield.value)){
+                    alert("user is already blocked!");
+                    return;
+                }
+                blocked.push(blockfield.value);
+                localStorage.setItem("abplus-blocked",JSON.stringify(blocked));
+                addblockelement(blockfield.value,list);
+                blockfield.value="";
+            })
+            blockdiv.appendChild(blockfield);
+            blockdiv.appendChild(blockbtn);
 
 
-        card.appendChild(title);
-        card.appendChild(document.createElement("hr"));
-        card.appendChild(blockedusertitle);
-        card.appendChild(list);
-        card.appendChild(document.createElement("hr"));
-        card.appendChild(document.createElement("br"));
-        card.appendChild(blockdiv);
+            card.appendChild(title);
+            card.appendChild(document.createElement("hr"));
+            card.appendChild(blockedusertitle);
+            card.appendChild(list);
+            card.appendChild(document.createElement("hr"));
+            card.appendChild(document.createElement("br"));
+            card.appendChild(blockdiv);
 
-        document.body.insertBefore(div,document.body.childNodes[7]);
-        document.body.insertBefore(document.createElement("br"),document.body.childNodes[8]);
-        
+            document.body.insertBefore(div,document.body.childNodes[7]);
+            document.body.insertBefore(document.createElement("br"),document.body.childNodes[8]);
+        }
         // 3rd card
+        {
+            let div = document.createElement("div");
+            div.classList.add("row");
+            div.classList.add("title_row");
+            let card = document.createElement("div");
+            card.classList.add("row_element");
+            card.classList.add("card");
+            div.appendChild(card);
 
-        div = document.createElement("div");
-        div.classList.add("row");
-        div.classList.add("title_row");
-        card = document.createElement("div");
-        card.classList.add("row_element");
-        card.classList.add("card");
-        div.appendChild(card);
+            let title = document.createElement("h3");
+            title.innerText ="Like Display Settings";
+            title.style.marginTop ="0px";
 
-        title = document.createElement("h3");
-        title.innerText ="Stats";
-        title.style.marginTop ="0px";
+            let ison = absettings("displaylikes");
+            let check = document.createElement("input");
+            check.style.cursor="pointer";
+            check.type = "checkbox";
+            check.id = "displaylikes-check-menu";
+            check.checked = ison;
+            check.addEventListener("change",(e)=>{
+                absettings("displaylikes",true,e.target.checked);
+                ison=e.target.checked;
+                if(ison){
+                }else{
+                }
+            });
+            let label = document.createElement("label");
+            label.innerText = "Display Likes";
+            label.setAttribute("for","displaylikes-check-menu");
 
-        let blockam = document.createElement("span");
-        blockam.innerText = "AB+ has blocked "+JSON.parse(localStorage.getItem("abplus-blockedimgs"))+ " images.";
+            let resetbtn = document.createElement("button");
+            resetbtn.innerText = "Reset";
+            resetbtn.classList.add("primary_button");
+            resetbtn.addEventListener("click",()=>{
+                absettings("displaylikes",true,defaultsettings.displaylikes);
+            })
+            card.appendChild(title);
+            card.appendChild(document.createElement("hr"));
+            card.appendChild(label);
+            card.appendChild(check);
+            card.appendChild(document.createElement("hr"));
+            card.appendChild(document.createElement("br"));
+            card.appendChild(resetbtn);
 
-        let resetbtn = document.createElement("button");
-        resetbtn.innerText = "Reset";
-        resetbtn.classList.add("primary-button");
-        resetbtn.addEventListener("click",()=>{
-            localStorage.removeItem("abplus-blockedimgs");
-            blockam.innerText = "AB+ has blocked 0 images.";
-        })
+            document.body.insertBefore(div,document.body.childNodes[9]);
+            document.body.insertBefore(document.createElement("br"),document.body.childNodes[10]);
 
+        }
+        // 4th card
+        {
+            let div = document.createElement("div");
+            div.classList.add("row");
+            div.classList.add("title_row");
+            let card = document.createElement("div");
+            card.classList.add("row_element");
+            card.classList.add("card");
+            div.appendChild(card);
 
+            let title = document.createElement("h3");
+            title.innerText ="Stats";
+            title.style.marginTop ="0px";
 
-        card.appendChild(title);
-        card.appendChild(document.createElement("hr"));
-        card.appendChild(blockam);
-        card.appendChild(document.createElement("hr"));
-        card.appendChild(document.createElement("br"));
-        card.appendChild(resetbtn);
+            let blockam = document.createElement("span");
+            blockam.innerText = "AB+ has blocked "+JSON.parse(localStorage.getItem("abplus-blockedimgs"))+ " images.";
 
-        document.body.insertBefore(div,document.body.childNodes[9]);
-
+            let resetbtn = document.createElement("button");
+            resetbtn.innerText = "Reset";
+            resetbtn.classList.add("primary_button");
+            resetbtn.addEventListener("click",()=>{
+                localStorage.removeItem("abplus-blockedimgs");
+                blockam.innerText = "AB+ has blocked 0 images.";
+            })
+            card.appendChild(title);
+            card.appendChild(document.createElement("hr"));
+            card.appendChild(blockam);
+            card.appendChild(document.createElement("hr"));
+            card.appendChild(document.createElement("br"));
+            card.appendChild(resetbtn);
+            document.body.insertBefore(div,document.body.childNodes[11]);
+        }
     }
 
     function addblockelement(block, list) {
@@ -512,8 +610,8 @@ function addextras() {
     //
 
 }
-
 function addcolorsafe(color){
+    //safe custom darkmode color to profile page
     let PARA = {
         headers:{
             "Host": "www.artbreeder.com",
@@ -537,7 +635,6 @@ function addcolorsafe(color){
     }
     }).catch(err=>{console.error(err)});
 }
-
 function addtags(tag,remove=false){
     if(!tag){alert("please enter a valid tag name"); return;}
     let selected = getselected();
@@ -560,6 +657,7 @@ function deleteimages(){
         deleteimage(key);
     });
 }
+
 function privateimages(private=true){
     let selected = getselected();
     let isokay;
@@ -604,6 +702,7 @@ function changetag(key="507880370586758c859d2a199847",tag="test",remove=false){
     }
     }).catch(err=>{console.error(err)});
 }
+
 function deleteimage(key="0"){
     let PARA;
     PARA = {
@@ -629,6 +728,7 @@ function deleteimage(key="0"){
     }
     }).catch(err=>{console.error(err)});
 }
+
 function privateimage(key="0",privacy=true){
     let PARA;
     PARA = {
@@ -669,6 +769,7 @@ function getselected() {
 }
 
 function speeeen(){
+    //speeeeeen
     let test = document.querySelectorAll("*");
     test.forEach(e => {
         e.style.transform = "rotate(" + 360 * (((Math.random() - .5))*10) + "deg)";
@@ -677,12 +778,7 @@ function speeeen(){
 }
 
 function enabledarkmode(){
-    let color = "#222222";
-    if(JSON.parse(localStorage.getItem("darkmode-color"))){
-        color = JSON.parse(localStorage.getItem("darkmode-color"))
-    }else{
-        localStorage.setItem("darkmode-color",JSON.stringify(color));
-    }
+    let color = absettings("darkmodecolor");
     let element = document.createElement('style'),sheet;
     element.id = "darkmodestylesheet";
     document.head.appendChild(element);
@@ -697,6 +793,7 @@ function enabledarkmode(){
 }
 
 function shadeColor(color, percent) {
+    // credits to this kind person below
     // https://stackoverflow.com/a/13532993
     var R = parseInt(color.substring(1,3),16);
     var G = parseInt(color.substring(3,5),16);
@@ -718,81 +815,137 @@ function disabledarkmode(){
     darkmodes.forEach(e=>{e.remove()});
 }
 
-function start(){
-    addextras();
-    console.log("fetching likes !");
-    let URL ="none";
-    let PARA;
+function getfilter(mode="browse"){
+    filters={};
+
+    let mo = document.querySelector(".model_options");
+    filters.modeloption = "all";
+    let am = 0;
+    for (let i = 0; i < mo.children.length; i++) {
+        if(!mo.children[i].classList.contains("inactive")){
+            am++;
+            filters.modeloption = mo.children[i].getAttribute("data-name");
+        }
+    }
+    if(am>1){
+        filters.modeloption = "all";
+    }else{
+        filters.modeloption = [filters.modeloption];
+    }
+    //why a switch ? idk i thought ill have to add more modes but there rly is only need for 2
+    switch(mode){
+        case "browse":
+            let bt = document.querySelector("#browse-type");
+            filters.browsetype = "trending";
+            for (let i = 0; i < bt.children.length; i++) {
+                if(bt.children[i].classList.contains("selected")){
+                    filters.browsetype = bt.children[i].getAttribute("data-name");
+                    break;
+                }
+            }
+            break;
+        case "user":
+            let os = document.querySelector(".image_options #offset");
+            filters.offset = os.value;
+            let imf = document.querySelector(".image_options .img-filter");
+            filters.browsetype = "created";
+            for (let i = 0; i < imf.children.length; i++) {
+                if(imf.children[i].classList.contains("selected")){
+                    filters.browsetype = imf.children[i].getAttribute("data-name");
+                    break;
+                }
+            }
+            let sof = document.querySelector(".image_options .img-order");
+            filters.order = "new";
+            for (let i = 0; i < sof.children.length; i++) {
+                if(sof.children[i].classList.contains("selected")){
+                    filters.order = sof.children[i].getAttribute("data-name");
+                    break;
+                }
+            }
+            break;
+        default:
+            console.error("That is not a valid option.");
+            break;
+    }
+    return filters;
+}
+    
+function getlikes(){
+    //go get em !
+    let URL;
+    let PARA={};
+    PARA.method="POST"
+    PARA.headers={
+        "Host": "www.artbreeder.com",
+        "Accept": "application/json",
+        "Accept-Encoding": "gzip, deflate, br",
+        "Referer": window.location.href+"",
+        "Content-Type": "application/json",
+        "Origin": "https://www.artbreeder.com",
+        "Content-Length": "124",
+    };
     if(USER=="browse"){
-        URL= "https://www.artbreeder.com/trending";
-        PARA = {
-            headers:{
-                "Host": "www.artbreeder.com",
-                "Accept": "application/json",
-                "Accept-Encoding": "gzip, deflate, br",
-                "Referer": "https://www.artbreeder.com/browse",
-                "Content-Type": "application/json",
-                "Origin": "https://www.artbreeder.com",
-                "Content-Length": "124",
-            },
-            body:JSON.stringify({
-                "order_by":"likes",
-                "limit":50,
-                "order":"desc",
-                "offset":0
-            }),
-            method:"POST"
+        let filter = getfilter("browse");
+        if(filter.browsetype=="random"||filter.browsetype=="search"){
+            console.warn("cant fetch likes for "+ filter.browsetype);
+            return;
+        }
+        PARA.body={
+            "starred_by":"any",
+            "models":filter.modeloption,
+            "limit":imageobserver.likechecksize,
+            "offset":imageobserver.likecheckoffset,
         };
+        if(filter.browsetype=="following"){
+            PARA.body.user_following=true;
+        }
+        if(filter.browsetype=="trending"){
+            URL= "https://www.artbreeder.com/trending";
+        }else{
+            URL= "https://www.artbreeder.com/images";
+        }
+        PARA.body=JSON.stringify(PARA.body);
+        
     }else if(USER=="i"){
         URL= "https://www.artbreeder.com/image_children";
         const queryString = window.location.search;
         const urlParams = new URLSearchParams(queryString);
         const id = urlParams.get('k');
-        PARA = {
-            headers:{
-                "Host": "www.artbreeder.com",
-                "Accept": "application/json",
-                "Accept-Encoding": "gzip, deflate, br",
-                "Referer": window.location.href+"",
-                "Content-Type": "application/json",
-                "Origin": "https://www.artbreeder.com",
-                "Content-Length": "124",
-            },
-            body:JSON.stringify({
-                "image_key":id,
-                "limit":50,
-                "offset":0
-            }),
-            method:"POST"
-        };
+        PARA.body = JSON.stringify({
+            "image_key":id,
+            "limit":imageobserver.likechecksize,
+            "offset":imageobserver.likecheckoffset,
+        });
     }else{
+        let filter = getfilter("user");
+        if(filter.browsetype=="liked"||filter.browsetype=="liked&created"){
+            console.warn("cant fetch likes for "+ filter.browsetype);
+            return;
+        }
+        filter.offset = Math.abs(Number(filter.offset));
         URL= "https://www.artbreeder.com/images";
-        PARA = {
-            headers:{
-                "Host": "www.artbreeder.com",
-                "Accept": "application/json",
-                "Accept-Encoding": "gzip, deflate, br",
-                "Referer": "https://www.artbreeder.com/"+USER+"",
-                "Content-Type": "application/json",
-                "Origin": "https://www.artbreeder.com",
-                "Content-Length": "124",
-            },
-            body:JSON.stringify({
-                "order_by":"likes",
-                "limit":50,
-                "creator":USER,
-                "starred_by":null,
-                "order":"desc",
-                "uploaded":false,
-                "models":"all",
-                "offset":0
-            }),
-            method:"POST"
+        PARA.body={
+            order_by:"image_new.id",
+            order:"desc",
+            creator:USER,
+            starred_by:null,
+            uploaded:false,
+            "models":filter.modeloption,
+            "limit":imageobserver.likechecksize,
+            "offset":imageobserver.likecheckoffset+filter.offset,
         };
-    }
-    if(URL==="none"){
-        console.log("cant fetch likes for this page.")
-        return;
+        if(filter.order=="popular"){
+            PARA.body.order_by="likes";
+        }
+        if(filter.order=="old"){
+            PARA.body.order="asc";
+        }
+        if(filter.browsetype=="uploaded"){
+            PARA.body.uploaded=true;
+        }
+
+        PARA.body=JSON.stringify(PARA.body);
     }
     fetch(URL,PARA)
     .then(response => {
@@ -802,34 +955,46 @@ function start(){
     return response.json();
     })
     .then(data=>{
-        console.log("raw like data:");
-        console.log(data);
-        displayLikes(data);
+        setTimeout(()=>{
+            displayLikes(data);
+        },500);
     })
     .catch(err=>{console.error(err)});
-
 }
 
 function displayLikes(likes){
+    
+    if(likes[0].likes===undefined){
+        console.error("likes arent defined in data",likes);
+        return;
+    }
+
     let imageContainer = imageobserver.imagecontainer;
     let images = imageContainer.childNodes;
-    let imgi = 0;
     for (let i = 0; i < images.length; i++) {
         if(images[i].lastChild==null){
             continue;
         }
-        while(images[i].getAttribute("data-key")!=likes[imgi].key){
-            imgi++;
+        if(images[i].querySelector("#abpluslikedisplay")!=null){
+            continue;
         }
         let likeHTML = document.createElement("p");
         likeHTML.classList.add("time_string");
+        likeHTML.id="abpluslikedisplay";
         likeHTML.style = "display: flex;align-items: center; margin-right:5px;" ;
-        likeHTML.innerText  = likes[imgi].likes;
-        if(likes[imgi].likes===null){
-            likeHTML.innerText  = 0;
+        //find likes 
+        let likeam="error";
+        for (let j = 0; j < likes.length; j++) {
+            if(likes[j].key==images[i].getAttribute("data-key")){
+                likeam = likes[j].likes;
+            }
         }
+        if(likeam=="error"){
+            continue;
+        }
+        if(likeam===null){likeam=0}
+        likeHTML.innerText  = likeam;
         images[i].lastChild.firstChild.insertBefore(likeHTML,images[i].lastChild.firstChild.childNodes[0]);
-        imgi++;
         
     }
 }
