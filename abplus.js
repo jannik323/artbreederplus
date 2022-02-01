@@ -464,6 +464,48 @@ function start() {
             card.appendChild(document.createElement("br"));
             card.appendChild(resetbtn);
             document.body.insertBefore(div,document.body.childNodes[11]);
+            document.body.insertBefore(document.createElement("br"),document.body.childNodes[12]);
+
+        }
+        // 5th card
+        {
+            let div = document.createElement("div");
+            div.id="#Info";
+            div.classList.add("row");
+            div.classList.add("title_row");
+            let card = document.createElement("div");
+            card.classList.add("row_element");
+            card.classList.add("card");
+            div.appendChild(card);
+
+            let title = document.createElement("h3");
+            title.innerText ="Info";
+            title.style.marginTop ="0px";
+
+            let github = document.createElement("a");
+            github.innerText = "github page";
+            github.href = "https://github.com/jannik323/artbreederplus";
+
+            let firefox = document.createElement("a");
+            firefox.innerText = "firefox addon page";
+            firefox.href = "https://addons.mozilla.org/en-US/firefox/addon/ab-plus/";
+
+            let discord = document.createElement("a");
+            discord.innerText = "Contact Info";
+            discord.href = "#Info";
+            discord.addEventListener("click",()=>{
+                alert("Discord : jannik#7401");
+            })
+
+            card.appendChild(title);
+            card.appendChild(document.createElement("hr"));
+            card.appendChild(github);
+            card.appendChild(document.createElement("br"));
+            card.appendChild(firefox);
+            card.appendChild(document.createElement("br"));
+            card.appendChild(discord);
+            card.appendChild(document.createElement("br"));
+            document.body.insertBefore(div,document.body.childNodes[13]);
         }
     }
 
