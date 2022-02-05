@@ -404,23 +404,25 @@ function start() {
             }
 
 
-            let searchdiv = document.querySelector("#search_container").cloneNode(true);
-            if(searchdiv!=null){
-                searchdiv.id="abptopsearch";
-                searchdiv.classList.remove("hidden");
-                modalhead.appendChild(searchdiv);
-                let btns = searchdiv.querySelector(".button-group");
-                for (let i = 0; i < btns.children.length; i++) {
-                    btns.children[i].onclick=(e)=>{
-                        for (let i = 0; i < btns.children.length; i++) {
-                            btns.children[i].classList.remove("selected");
-                        }
-                        btns.children[i].classList.add("selected");
-                    }
-                }
-            }else{
-                console.error("searchdiv not found");
-            }
+            // as of now it takes a bit of a toll on the server so ive removed it for now
+
+            // let searchdiv = document.querySelector("#search_container").cloneNode(true);
+            // if(searchdiv!=null){
+            //     searchdiv.id="abptopsearch";
+            //     searchdiv.classList.remove("hidden");
+            //     modalhead.appendChild(searchdiv);
+            //     let btns = searchdiv.querySelector(".button-group");
+            //     for (let i = 0; i < btns.children.length; i++) {
+            //         btns.children[i].onclick=(e)=>{
+            //             for (let i = 0; i < btns.children.length; i++) {
+            //                 btns.children[i].classList.remove("selected");
+            //             }
+            //             btns.children[i].classList.add("selected");
+            //         }
+            //     }
+            // }else{
+            //     console.error("searchdiv not found");
+            // }
 
             
             let places = document.createElement("input");
@@ -457,17 +459,17 @@ function start() {
                     model = "all";
                 }
 
-                let searchmode = "idfk";
-                let btns = searchdiv.querySelector(".button-group");
-                for (let i = 0; i < btns.children.length; i++) {
-                    if(btns.children[i].classList.contains("selected")){
-                        searchmode=btns.children[i].getAttribute("data-name");
-                    }
-                }
+                let searchmode = "substring";
+                // let btns = searchdiv.querySelector(".button-group");
+                // for (let i = 0; i < btns.children.length; i++) {
+                //     if(btns.children[i].classList.contains("selected")){
+                //         searchmode=btns.children[i].getAttribute("data-name");
+                //     }
+                // }
 
                 let tags = [];
-                let searchinput = searchdiv.querySelector(".search");
-                tags = [searchinput.value];
+                // let searchinput = searchdiv.querySelector(".search");
+                // tags = [searchinput.value];
 
 
                 getTopImg(places.value,{model:model,searchmode:searchmode,tags:tags});
@@ -1297,7 +1299,7 @@ function enabledarkmode(){
     sheet = element.sheet;
     sheet.insertRule(".dropdown-content a,*,a,.header_option{color:#898989;}", sheet.cssRules.length);
     sheet.insertRule(".recent-tag,#image-tag-popup,.social,.notification,body,.modal-content{background:"+color+";}", sheet.cssRules.length);
-    sheet.insertRule(".text-container-inner,#image-group-selector,.model, .method,.button-group .option.selected,.card,.text-imagecontainer-inner,.dropdown-content,.taginfo,.usergene-info,.gene_controller,.user-pill,.header{background:"+shadeColor(color,-70)+";}", sheet.cssRules.length);
+    sheet.insertRule(".container,.text-container-inner,#image-group-selector,.model, .method,.button-group .option.selected,.card,.text-imagecontainer-inner,.dropdown-content,.taginfo,.usergene-info,.gene_controller,.user-pill,.header{background:"+shadeColor(color,-70)+";}", sheet.cssRules.length);
     sheet.insertRule(".image-tag,select,#preview,input,.button-group .option{background:#333;}", sheet.cssRules.length);
     sheet.insertRule(".gene_controller img{background:#999; border-radius:5px}", sheet.cssRules.length);
     sheet.insertRule("img[src='/image/loading_spinner.gif']{filter: invert(100%);}", sheet.cssRules.length)
