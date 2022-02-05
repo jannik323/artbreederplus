@@ -1,7 +1,7 @@
 let defaultsettings = {
     displaylikes:true,
     blocknoti:true,
-    experimental:false,
+    displaytopimgs:false,
     darkmode:true,
     darkmodecolor:"#222222",
 }
@@ -38,6 +38,9 @@ let defaultsettings = {
         localStorage.removeItem("darkmode-color");
     }
 }
+
+// abp style stuff
+customstyle();
 
 if(absettings("darkmode")){
     enabledarkmode();
@@ -318,10 +321,8 @@ function start() {
         localStorage.setItem("abplus-blocked",JSON.stringify(blocks));
     }
 
-    {let speen = document.createElement("button");speen.style.transform="scale(0.1)";speen.style.opacity=0.5; speen.addEventListener("click",()=>{speeeen()});document.body.appendChild(speen);}
-
     // topimgs thing
-    if(absettings("experimental")){
+    if(absettings("displaytopimgs")){
 
         let contenttype = document.querySelector(".content-type");
         if(contenttype!==null){
@@ -544,42 +545,6 @@ function start() {
     });
     //
 
-
-    // abp style stuff
-    let style = document.querySelector("style"),sheet;
-    if(style!=null){
-        sheet = style.sheet;
-        sheet.insertRule(".header a.logo span{transition:color .5s }", sheet.cssRules.length);
-        sheet.insertRule(".header a.logo span:hover{color:white }", sheet.cssRules.length);
-        //remove weird scrollbars
-        sheet.insertRule(".profile_nav,.buttons_container{overflow:auto !important}", sheet.cssRules.length);    
-        //selector shit
-        sheet.insertRule("#abplus-masstag-input{border: none; background: transparent;text-align: center;width: 100px;}", sheet.cssRules.length);    
-        sheet.insertRule("#abplus-masstag-input:focus-visible{outline: none;}", sheet.cssRules.length);    
-        //block btn 
-        sheet.insertRule("#block_button{margin-left:1rem; background:red;}", sheet.cssRules.length);    
-        sheet.insertRule(".card{width: 500px;background-color: white;box-shadow: 0 4px 4px 0 rgba(0, 0, 0, 0.1);border-radius: 5px;padding: 20px;}", sheet.cssRules.length);   
-        sheet.insertRule(".row_element{display: inline-block;max-width: 450px;}", sheet.cssRules.length);   
-        //blockeduserlist
-        sheet.insertRule(".blockeduser{display:flex;align-items:center;list-style-type: none; background: rgba(67, 64, 64, 0.58); margin: 1rem;}", sheet.cssRules.length);   
-        sheet.insertRule(".blockeduser button{margin-left: auto;}", sheet.cssRules.length);   
-        sheet.insertRule(".blockeduser span{margin-left:1rem;}", sheet.cssRules.length);   
-        sheet.insertRule(".blockeduser span:hover{cursor:pointer}", sheet.cssRules.length);   
-        // X something
-        sheet.insertRule(".Xsomething::after{content: url(/svg/x_s1.svg);width: 100%;height: 100%;scale: 2.5;justify-content: center;align-items: center;display: flex;}", sheet.cssRules.length);   
-        //hover
-        sheet.insertRule(".hoverpointer{cursor:pointer}", sheet.cssRules.length);
-        // top img contaienr thingy
-        sheet.insertRule(".abpbtm{display:flex; gap: 9px;}", sheet.cssRules.length);   
-        sheet.insertRule(".placeab{filter: drop-shadow(0 0 1px black);}", sheet.cssRules.length);   
-        sheet.insertRule(".modal,.modal-body{overflow: hidden !important;}", sheet.cssRules.length);
-        sheet.insertRule(".modal-content{height: 96%;}", sheet.cssRules.length);
-        sheet.insertRule(".abpheader{font-size:2rem;}", sheet.cssRules.length);
-        sheet.insertRule("#abptopmodal .modal-body .images_container {max-height: 70vh;overflow: hidden auto;}", sheet.cssRules.length);
-        //custom btns for download and upload at blocked users
-        sheet.insertRule(".abpcstmbtn{cursor:pointer;filter: contrast(0%);width: 2rem;aspect-ratio: 1/1;border: 1px solid gray;border-radius: 5px;margin: 3px;padding: 3px;}", sheet.cssRules.length);
-    }
-
     // ab+ page
     if(USER=="artbreederplus"){
         let abplustitle = document.querySelector(".row.title_row h1");
@@ -637,7 +602,6 @@ function start() {
 
             let ison = absettings("darkmode");
             let check = document.createElement("input");
-            check.style.cursor="pointer";
             check.type = "checkbox";
             check.id = "darkmode-check-menu";
             check.checked = ison;
@@ -652,6 +616,7 @@ function start() {
             });
             let label = document.createElement("label");
             label.innerText = "Darkmode";
+            label.classList.add("hoverpointer");
             label.setAttribute("for","darkmode-check-menu");
             
 
@@ -695,7 +660,6 @@ function start() {
 
             let ison = absettings("blocknoti");
             let check = document.createElement("input");
-            check.style.cursor="pointer";
             check.type = "checkbox";
             check.id = "blocknoti-check-menu";
             check.checked = ison;
@@ -715,6 +679,7 @@ function start() {
             });
             let label = document.createElement("label");
             label.innerText = "Block Notifications ";
+            label.classList.add("hoverpointer");
             label.setAttribute("for","blocknoti-check-menu");
             card.appendChild(label);
             card.appendChild(check);
@@ -814,54 +779,7 @@ function start() {
             document.body.insertBefore(div,document.body.childNodes[7]);
             document.body.insertBefore(document.createElement("br"),document.body.childNodes[8]);
         }
-        // 3rd card like display
-        {
-            let div = document.createElement("div");
-            div.classList.add("row");
-            div.classList.add("title_row");
-            let card = document.createElement("div");
-            card.classList.add("row_element");
-            card.classList.add("card");
-            div.appendChild(card);
-
-            let title = document.createElement("h3");
-            title.innerText ="Like Display Settings";
-            title.style.marginTop ="0px";
-
-            let ison = absettings("displaylikes");
-            let check = document.createElement("input");
-            check.style.cursor="pointer";
-            check.type = "checkbox";
-            check.id = "displaylikes-check-menu";
-            check.checked = ison;
-            check.addEventListener("change",(e)=>{
-                absettings("displaylikes",true,e.target.checked);
-                ison=e.target.checked;
-            });
-            let label = document.createElement("label");
-            label.innerText = "Display Likes";
-            label.setAttribute("for","displaylikes-check-menu");
-
-            let resetbtn = document.createElement("button");
-            resetbtn.innerText = "Reset";
-            resetbtn.classList.add("primary_button");
-            resetbtn.addEventListener("click",()=>{
-                absettings("displaylikes",true,defaultsettings.displaylikes);
-                check.checked = false;
-            })
-            card.appendChild(title);
-            card.appendChild(document.createElement("hr"));
-            card.appendChild(label);
-            card.appendChild(check);
-            card.appendChild(document.createElement("hr"));
-            card.appendChild(document.createElement("br"));
-            card.appendChild(resetbtn);
-
-            document.body.insertBefore(div,document.body.childNodes[9]);
-            document.body.insertBefore(document.createElement("br"),document.body.childNodes[10]);
-
-        }
-        // 4th card other settings
+        // 3rd card other settings
         {
             let div = document.createElement("div");
             div.classList.add("row");
@@ -874,56 +792,89 @@ function start() {
             let title = document.createElement("h3");
             title.innerText ="Other Settings";
             title.style.marginTop ="0px";
+            card.appendChild(title);
+            card.appendChild(document.createElement("hr"));
 
-            let ison = absettings("experimental");
+            {let ison = absettings("displaytopimgs");
             let check = document.createElement("input");
-            check.style.cursor="pointer";
             check.type = "checkbox";
-            check.id = "experimental-check-menu";
+            check.id = "displaytopimgs-check-menu";
             check.checked = ison;
             check.addEventListener("change",(e)=>{
-                absettings("experimental",true,e.target.checked);
+                absettings("displaytopimgs",true,e.target.checked);
                 ison=e.target.checked;
-                if(ison){
-                }else{
-                }
             });
             let label = document.createElement("label");
-            label.innerText = "Experimental Features";
-            label.setAttribute("for","experimental-check-menu");
+            label.innerText = "Top Images Tab";
+            label.classList.add("hoverpointer");
+            label.setAttribute("for","displaytopimgs-check-menu");
+            card.appendChild(label);
+            card.appendChild(check);
+            card.appendChild(document.createElement("br"));}
+
+            {let ison = absettings("displaylikes");
+            let check = document.createElement("input");
+            check.type = "checkbox";
+            check.id = "displaylikes-check-menu";
+            check.checked = ison;
+            check.addEventListener("change",(e)=>{
+                absettings("displaylikes",true,e.target.checked);
+                ison=e.target.checked;
+            });
+            let label = document.createElement("label");
+            label.innerText = "Display Likes";
+            label.classList.add("hoverpointer");
+            label.setAttribute("for","displaylikes-check-menu");
+            card.appendChild(label);
+            card.appendChild(check);
+            card.appendChild(document.createElement("br"));}
+
 
             let hardresetbtn = document.createElement("button");
             hardresetbtn.innerText = "Hard Reset";
             hardresetbtn.style.background ="darkred";
             hardresetbtn.addEventListener("click",()=>{
-                localStorage.removeItem("abplus-settings");
-                localStorage.removeItem("abplus-blocked");
-                localStorage.removeItem("abplus-blockedimgs");
-                location.reload(true);                
+                if(confirm("Do you really want to reset all settings?")){
+                    localStorage.removeItem("abplus-settings");
+                    localStorage.removeItem("abplus-blocked");
+                    localStorage.removeItem("abplus-blockedimgs");
+                    location.reload(true);                
+                }
             })
+            card.appendChild(hardresetbtn);
+            card.appendChild(document.createElement("br"));
+
+
+            let speenbtn = document.createElement("button");
+            speenbtn.innerText = "Speen";
+            speenbtn.addEventListener("click",()=>{
+                if(confirm("Do you really want to speen?")){
+                    speeeen();             
+                }
+            })
+            card.appendChild(speenbtn);
+            card.appendChild(document.createElement("br"));
+            card.appendChild(document.createElement("hr"));
 
             let resetbtn = document.createElement("button");
             resetbtn.innerText = "Reset";
             resetbtn.classList.add("primary_button");
             resetbtn.addEventListener("click",()=>{
-                absettings("experimental",true,defaultsettings.displaylikes);
-                check.checked = false;
+                absettings("displaytopimgs",true,defaultsettings.displaytopimgs);
+                absettings("displaylikes",true,defaultsettings.displaylikes);
+                document.getElementById("displaytopimgs-check-menu").checked=defaultsettings.displaytopimgs
+                document.getElementById("displaylikes-check-menu").checked=defaultsettings.displaylikes
             })
-            card.appendChild(title);
-            card.appendChild(document.createElement("hr"));
-            card.appendChild(label);
-            card.appendChild(check);
-            card.appendChild(document.createElement("br"));
-            card.appendChild(hardresetbtn);
-            card.appendChild(document.createElement("hr"));
-            card.appendChild(document.createElement("br"));
             card.appendChild(resetbtn);
+            
+            
 
-            document.body.insertBefore(div,document.body.childNodes[11]);
-            document.body.insertBefore(document.createElement("br"),document.body.childNodes[12]);
+            document.body.insertBefore(div,document.body.childNodes[9]);
+            document.body.insertBefore(document.createElement("br"),document.body.childNodes[10]);
 
         }
-        // 5th card stats
+        // 4th card stats
+
         {
             let div = document.createElement("div");
             div.classList.add("row");
@@ -958,10 +909,11 @@ function start() {
             card.appendChild(document.createElement("hr"));
             card.appendChild(document.createElement("br"));
             card.appendChild(resetbtn);
-            document.body.insertBefore(div,document.body.childNodes[13]);
-            document.body.insertBefore(document.createElement("br"),document.body.childNodes[14]);
+            document.body.insertBefore(div,document.body.childNodes[11]);
+            document.body.insertBefore(document.createElement("br"),document.body.childNodes[12]);
         }
-        // 6th card info
+        // 5th card info
+
         {
             let div = document.createElement("div");
             div.id="#Info";
@@ -999,8 +951,8 @@ function start() {
             card.appendChild(document.createElement("br"));
             card.appendChild(discord);
             card.appendChild(document.createElement("br"));
-            document.body.insertBefore(div,document.body.childNodes[15]);
-            document.body.insertBefore(document.createElement("br"),document.body.childNodes[16]);
+            document.body.insertBefore(div,document.body.childNodes[13]);
+            document.body.insertBefore(document.createElement("br"),document.body.childNodes[14]);
 
         }
     }
@@ -1160,6 +1112,48 @@ function start() {
 
 }
 
+function customstyle() {
+    {
+        let element = document.createElement('style'), sheet;
+        element.id = "abpcustomstyle";
+        document.head.appendChild(element);
+        sheet = element.sheet;
+        //logo
+        sheet.insertRule(".header a.logo span{transition:color .5s }", sheet.cssRules.length);
+        sheet.insertRule(".header a.logo span:hover{color:white }", sheet.cssRules.length);
+        //remove weird scrollbars
+        sheet.insertRule(".profile_nav,.buttons_container{overflow:auto !important}", sheet.cssRules.length);
+        //selector shit
+        sheet.insertRule("#abplus-masstag-input{border: none; background: transparent;text-align: center;width: 100px;}", sheet.cssRules.length);
+        sheet.insertRule("#abplus-masstag-input:focus-visible{outline: none;}", sheet.cssRules.length);
+        //block btn 
+        sheet.insertRule("#block_button{margin-left:1rem; background:red;}", sheet.cssRules.length);
+        sheet.insertRule(".card{width: 500px;background-color: white;box-shadow: 0 4px 4px 0 rgba(0, 0, 0, 0.1);border-radius: 5px;padding: 20px;}", sheet.cssRules.length);
+        sheet.insertRule(".row_element{display: inline-block;max-width: 450px;}", sheet.cssRules.length);
+        //blockeduserlist
+        sheet.insertRule(".blockeduser{display:flex;align-items:center;list-style-type: none; background: rgba(67, 64, 64, 0.58); margin: 1rem;}", sheet.cssRules.length);
+        sheet.insertRule(".blockeduser button{margin-left: auto;}", sheet.cssRules.length);
+        sheet.insertRule(".blockeduser span{margin-left:1rem;}", sheet.cssRules.length);
+        sheet.insertRule(".blockeduser span:hover{cursor:pointer}", sheet.cssRules.length);
+        // X something
+        sheet.insertRule(".Xsomething::after{content: url(/svg/x_s1.svg);width: 100%;height: 100%;scale: 2.5;justify-content: center;align-items: center;display: flex;}", sheet.cssRules.length);
+        //hover
+        sheet.insertRule(".hoverpointer{cursor:pointer}", sheet.cssRules.length);
+        // top img contaienr thingy
+        sheet.insertRule(".abpbtm{display:flex; gap: 9px;}", sheet.cssRules.length);
+        sheet.insertRule(".placeab{filter: drop-shadow(0 0 1px black);}", sheet.cssRules.length);
+        sheet.insertRule(".modal,.modal-body{overflow: hidden !important;}", sheet.cssRules.length);
+        sheet.insertRule(".modal-content{height: 96%;}", sheet.cssRules.length);
+        sheet.insertRule(".abpheader{font-size:2rem;}", sheet.cssRules.length);
+        sheet.insertRule("#abptopmodal .modal-body .images_container {max-height: 70vh;overflow: hidden auto;}", sheet.cssRules.length);
+        //custom btns for download and upload at blocked users
+        sheet.insertRule(".abpcstmbtn{cursor:pointer;filter: contrast(0%);width: 2rem;aspect-ratio: 1/1;border: 1px solid gray;border-radius: 5px;margin: 3px;padding: 3px;}", sheet.cssRules.length);
+        // selected mode 
+        sheet.insertRule(".text_button.selected {border-bottom: 1px solid white;}", sheet.cssRules.length);
+
+    }
+}
+
 function addcolorsafe(color){
     //safe custom darkmode color to profile page
     let PARA = {
@@ -1308,7 +1302,7 @@ function enabledarkmode(){
     sheet.insertRule(".gene_controller img{background:#999; border-radius:5px}", sheet.cssRules.length);
     sheet.insertRule("img[src='/image/loading_spinner.gif']{filter: invert(100%);}", sheet.cssRules.length)
     sheet.insertRule("#image-tag-popup input[type='text']{background:black !important;}",sheet.cssRules.length)
-    sheet.insertRule(".user-links img{filter: drop-shadow(0px 0px 1px rgba(255, 255, 255, 1.0)) drop-shadow(0px 0px 4px rgba(255, 255, 255, 0.75)); background: none !important;}",sheet.cssRules.length)
+    sheet.insertRule(".taginfo img,.user-links img{filter: drop-shadow(0px 0px 1px rgba(255, 255, 255, 1.0)) drop-shadow(0px 0px 4px rgba(255, 255, 255, 0.75)); background: none !important;}",sheet.cssRules.length)
 }
 
 function shadeColor(color, percent) {
