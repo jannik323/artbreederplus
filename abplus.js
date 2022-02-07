@@ -1,6 +1,7 @@
 let defaultsettings = {
     displaylikes:true,
     blocknoti:true,
+    displayfollows:false,
     displaytopimgs:false,
     darkmode:true,
     darkmodecolor:"#222222",
@@ -302,6 +303,34 @@ function displaytopimgs(data,container){
         container.appendChild(div);
     }
     document.getElementById("abpreqbtn").classList.remove("disabled");
+}
+
+function getallfollowers(container){
+    if(container!=null){
+        let am = container.children.length;
+        let i = 0;
+        let getem = setInterval(() => {
+            getfollower(container,i);
+            i++;
+            if(i>=am){
+                clearInterval(getem);
+            }
+        }, 400);
+    }
+}
+
+function getfollower(followertab,i){
+    const element = followertab.children[i];
+    let num = document.createElement("p");
+    fetch(element.href)
+    .then(response => {
+        return response.text()
+    }).then(html => {
+        let parser = new DOMParser();
+        let doc = parser.parseFromString(html, "text/html");
+        num.innerText=doc.querySelector("#followers").children.length;
+    element.appendChild(num);
+    }).catch(err=>{console.error(err)});
 }
 
 function start() {
@@ -686,12 +715,14 @@ function start() {
             card.appendChild(label);
             card.appendChild(check);
 
+            let blocked = JSON.parse(localStorage.getItem("abplus-blocked"));
 
             
             let blockedusertitle = document.createElement("h4");
-            blockedusertitle.innerText = "Blocked Users";
+            blockedusertitle.innerText = "Blocked Users ("+blocked.length +")";
             blockedusertitle.style.marginBottom="0px";
             blockedusertitle.style.marginTop="2rem";
+            blockedusertitle.id="abpblockedtitle";
             card.appendChild(blockedusertitle);
 
 
@@ -699,7 +730,6 @@ function start() {
             list.style.height =" 200px";
             list.style.overflowY = "auto";
             list.style.border = "1px solid grey";
-            let blocked = JSON.parse(localStorage.getItem("abplus-blocked"));
             blocked.forEach(block => {
                 addblockelement(block, list);
             });
@@ -729,6 +759,7 @@ function start() {
                 blocked.push(blockfield.value);
                 localStorage.setItem("abplus-blocked",JSON.stringify(blocked));
                 addblockelement(blockfield.value,list);
+                blockedusertitle.innerText = "Blocked Users ("+list.children.length +")";
                 blockfield.value="";
             })
             blockdiv.appendChild(blockfield);
@@ -739,7 +770,9 @@ function start() {
             download.classList.add("abpcstmbtn");
             download.src="/svg/download.svg";
             download.onclick=()=>{
-                alert(JSON.parse(localStorage.getItem("abplus-blocked")))
+                let tocopy = JSON.parse(localStorage.getItem("abplus-blocked"));
+                navigator.clipboard.writeText(tocopy);
+                alert("The block list : "+tocopy + " , has been copied to your clipboard!");
             }
             blockdiv.appendChild(download);
 
@@ -755,6 +788,8 @@ function start() {
                 data.forEach(block => {
                     addblockelement(block, list);
                 });
+                blockedusertitle.innerText = "Blocked Users ("+list.children.length +")";
+
             }
             blockdiv.appendChild(upload);
 
@@ -766,6 +801,7 @@ function start() {
                 while (list.hasChildNodes()) {  
                     list.removeChild(list.firstChild);
                 }
+                blockedusertitle.innerText = "Blocked Users ("+list.children.length +")";
                 localStorage.setItem("abplus-blocked",JSON.stringify(data));
             }
             blockdiv.appendChild(clear);
@@ -827,6 +863,23 @@ function start() {
             label.innerText = "Display Likes";
             label.classList.add("hoverpointer");
             label.setAttribute("for","displaylikes-check-menu");
+            card.appendChild(label);
+            card.appendChild(check);
+            card.appendChild(document.createElement("br"));}
+
+            {let ison = absettings("displayfollows");
+            let check = document.createElement("input");
+            check.type = "checkbox";
+            check.id = "displayfollows-check-menu";
+            check.checked = ison;
+            check.addEventListener("change",(e)=>{
+                absettings("displayfollows",true,e.target.checked);
+                ison=e.target.checked;
+            });
+            let label = document.createElement("label");
+            label.innerText = "Display Follows";
+            label.classList.add("hoverpointer");
+            label.setAttribute("for","displayfollows-check-menu");
             card.appendChild(label);
             card.appendChild(check);
             card.appendChild(document.createElement("br"));}
@@ -977,6 +1030,8 @@ function start() {
             }
             localStorage.setItem("abplus-blocked",JSON.stringify(savedblock));
             blockeduser.remove();
+            document.getElementById("abpblockedtitle").innerText = "Blocked Users ("+list.children.length +")";
+
         });
         blockeduser.appendChild(blockname);
         blockeduser.appendChild(removebtn);
@@ -1039,6 +1094,33 @@ function start() {
         }
     }
 
+    if(absettings("displayfollows")){
+        let followerbtn= document.querySelector("h4.followers"); 
+        if(followerbtn!=null){
+            let container = document.getElementById("followers");
+            if(followerbtn.classList.contains("selected")){
+                getallfollowers(container);
+    
+            }else{
+                followerbtn.addEventListener("click",()=>{
+                    getallfollowers(container);
+                },{once:true});
+            }
+        }
+        let followingbtn= document.querySelector("h4.following"); 
+        if(followingbtn!=null){
+            let container = document.getElementById("following");
+            if(followingbtn.classList.contains("selected")){
+                getallfollowers(container);
+    
+            }else{
+                followingbtn.addEventListener("click",()=>{
+                    getallfollowers(container);
+                },{once:true});
+            }
+        }
+    }
+    
     //notification blocker
     let notic = document.getElementById("notification_container");
     if(notic!=null&&absettings("blocknoti")){
@@ -1144,8 +1226,8 @@ function customstyle() {
         // top img contaienr thingy
         sheet.insertRule(".abpbtm{display:flex; gap: 9px;}", sheet.cssRules.length);
         sheet.insertRule(".placeab{filter: drop-shadow(0 0 1px black);}", sheet.cssRules.length);
-        sheet.insertRule(".modal,.modal-body{overflow: hidden !important;}", sheet.cssRules.length);
-        sheet.insertRule(".modal-content{height: 96%;}", sheet.cssRules.length);
+        sheet.insertRule(".modal,#abptopmodal.modal-body{overflow: hidden !important;}", sheet.cssRules.length);
+        sheet.insertRule("#abptopmodal.modal-content{height: 96%;}", sheet.cssRules.length);
         sheet.insertRule(".abpheader{font-size:2rem;}", sheet.cssRules.length);
         sheet.insertRule("#abptopmodal .modal-body .images_container {max-height: 70vh;overflow: hidden auto;}", sheet.cssRules.length);
         //custom btns for download and upload at blocked users
@@ -1304,7 +1386,7 @@ function enabledarkmode(){
     sheet.insertRule(".gene_controller img{background:#999; border-radius:5px}", sheet.cssRules.length);
     sheet.insertRule("img[src='/image/loading_spinner.gif']{filter: invert(100%);}", sheet.cssRules.length)
     sheet.insertRule("#image-tag-popup input[type='text']{background:black !important;}",sheet.cssRules.length)
-    sheet.insertRule(".taginfo img,.user-links img{filter: drop-shadow(0px 0px 1px rgba(255, 255, 255, 1.0)) drop-shadow(0px 0px 4px rgba(255, 255, 255, 0.75)); background: none !important;}",sheet.cssRules.length)
+    sheet.insertRule(".repeat,.taginfo img,.user-links img{filter: drop-shadow(0px 0px 1px rgba(255, 255, 255, 1.0)) drop-shadow(0px 0px 4px rgba(255, 255, 255, 0.75)); background: none !important;}",sheet.cssRules.length)
 }
 
 function shadeColor(color, percent) {
