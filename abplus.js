@@ -1,10 +1,13 @@
 let defaultsettings = {
     displaylikes:true,
     blocknoti:true,
+    imgblocks:false,
     displayfollows:false,
     displaytopimgs:false,
     darkmode:true,
     darkmodecolor:"#222222",
+    customcss:"",
+    customcssactive:false,
 }
 { // check default 
     let settings =  JSON.parse(localStorage.getItem("abplus-settings"));
@@ -137,6 +140,7 @@ function addclickEvent(){
     
 function removeblockedimgs(){
     let savedblock = JSON.parse(localStorage.getItem("abplus-blocked"));
+    let savedblockimg = JSON.parse(localStorage.getItem("abplus-blocked-img"));
     if(savedblock.includes(USER)){
         console.log("stopped blocking images by "+USER+ " temporary. User is on their profile page.");
         return;
@@ -144,8 +148,30 @@ function removeblockedimgs(){
     let imageContainer = Imo.imagecontainer;
     let images = imageContainer.childNodes;
     let deletecount=0;
+    let canblockimgs = absettings("imgblocks");
     for (let i = 0; i < images.length; i++) {
-        if(images[i].lastChild==null){
+        if(images[i].lastChild==null||images[i].style.display==="none"){
+            continue;
+        }
+
+        //add block btn
+        if(images[i].querySelector(".remove")==null&&canblockimgs){
+            let x = document.createElement("img");
+            x.classList.add("remove");
+            x.classList.add("image_opt");
+            x.src="/svg/x.svg";
+            x.onclick=()=>{
+                let blockimgs=JSON.parse(localStorage.getItem("abplus-blocked-img"));
+                blockimgs.push(images[i].getAttribute("data-key"));
+                localStorage.setItem("abplus-blocked-img",JSON.stringify(blockimgs));
+                images[i].style.display="none";
+            }
+            images[i].insertBefore(x,images[i].children[0]);
+        }
+        
+        if(savedblockimg.includes(images[i].getAttribute("data-key"))&&canblockimgs){
+            images[i].style.display =" none";
+            deletecount++;
             continue;
         }
         let imgowner = images[i].querySelector("a.creator_name").innerText;
@@ -346,8 +372,11 @@ function start() {
 
     //defaulting localstorage
     if(localStorage.getItem("abplus-blocked")==null){
-        let blocks = []
-        localStorage.setItem("abplus-blocked",JSON.stringify(blocks));
+        localStorage.setItem("abplus-blocked",JSON.stringify([]));
+    }
+
+    if(localStorage.getItem("abplus-blocked-img")==null){
+        localStorage.setItem("abplus-blocked-img",JSON.stringify([]));
     }
 
     // topimgs thing
@@ -670,8 +699,8 @@ function start() {
             card.appendChild(document.createElement("br"));
             card.appendChild(reset);
 
-            document.body.insertBefore(div,document.body.childNodes[5]);
-            document.body.insertBefore(document.createElement("br"),document.body.childNodes[6]);
+            document.body.appendChild(div);
+            document.body.appendChild(document.createElement("br"));
         }
         // 2nd card //blocked users
         {
@@ -714,9 +743,61 @@ function start() {
             label.setAttribute("for","blocknoti-check-menu");
             card.appendChild(label);
             card.appendChild(check);
+            card.appendChild(document.createElement("br"));
+            
+            
+            let blockedimgscount = document.createElement("h4");
+            let clearimgblockbtn = document.createElement("button");
 
+            {let ison = absettings("imgblocks");
+            let check = document.createElement("input");
+            check.type = "checkbox";
+            check.id = "imgblocks-check-menu";
+            check.checked = ison;
+            if(!ison){
+                blockedimgscount.style.display="none";
+                clearimgblockbtn.style.display="none";
+            }
+            check.addEventListener("change",(e)=>{
+                absettings("imgblocks",true,e.target.checked);
+                ison=e.target.checked;
+                if(e.target.checked){
+                    blockedimgscount.style.display="block";
+                    clearimgblockbtn.style.display="inline";
+                }else{
+                    blockedimgscount.style.display="none";
+                    clearimgblockbtn.style.display="none";
+                }
+            });
+            let label = document.createElement("label");
+            label.innerText = "Block Specific Images";
+            label.classList.add("hoverpointer");
+            label.setAttribute("for","imgblocks-check-menu");
+            card.appendChild(label);
+            card.appendChild(check);
+            card.appendChild(document.createElement("br"));}
+
+            let blockedimg = JSON.parse(localStorage.getItem("abplus-blocked-img"));
+            blockedimgscount.innerText = "Blocked Images ("+blockedimg.length +")";
+            if(blockedimg.length>50){
+                if(confirm("Do you want to clear your image blocks ? Its best to not have that many image blocks. You wont see most of the  blocked images again anyways.")){
+                    localStorage.setItem("abplus-blocked-img",JSON.stringify([]));
+                    blockedimgscount.innerText = "Blocked Images (0)";
+                }
+            }
+            blockedimgscount.style.marginBottom="0px";
+            blockedimgscount.style.marginTop="1rem";
+            card.appendChild(blockedimgscount);
+
+            clearimgblockbtn.innerText = "Clear Image Blocks";
+            clearimgblockbtn.onclick=()=>{
+                localStorage.setItem("abplus-blocked-img",JSON.stringify([]));
+                blockedimgscount.innerText = "Blocked Images (0)";
+            }
+            card.appendChild(clearimgblockbtn);
+
+            
             let blocked = JSON.parse(localStorage.getItem("abplus-blocked"));
-
             
             let blockedusertitle = document.createElement("h4");
             blockedusertitle.innerText = "Blocked Users ("+blocked.length +")";
@@ -724,6 +805,7 @@ function start() {
             blockedusertitle.style.marginTop="2rem";
             blockedusertitle.id="abpblockedtitle";
             card.appendChild(blockedusertitle);
+
 
 
             let list = document.createElement("ul");
@@ -814,8 +896,8 @@ function start() {
             card.appendChild(document.createElement("br"));
             card.appendChild(blockdiv);
 
-            document.body.insertBefore(div,document.body.childNodes[7]);
-            document.body.insertBefore(document.createElement("br"),document.body.childNodes[8]);
+            document.body.appendChild(div);
+            document.body.appendChild(document.createElement("br"));
         }
         // 3rd card other settings
         {
@@ -924,9 +1006,98 @@ function start() {
             
             
 
-            document.body.insertBefore(div,document.body.childNodes[9]);
-            document.body.insertBefore(document.createElement("br"),document.body.childNodes[10]);
+            document.body.appendChild(div);
+            document.body.appendChild(document.createElement("br"));
 
+        }
+
+        // 3.5th card custom css
+
+        {
+            let div = document.createElement("div");
+            div.classList.add("row");
+            div.classList.add("title_row");
+            let card = document.createElement("div");
+            card.classList.add("row_element");
+            card.classList.add("card");
+            div.appendChild(card);
+
+            let title = document.createElement("h3");
+            title.innerText ="Custom Css Settings";
+            title.style.marginTop ="0px"
+            card.appendChild(title);
+            card.appendChild(document.createElement("hr"));
+            
+            let textarea = document.createElement("textarea");
+            let applybtn = document.createElement("button");
+
+            {let ison = absettings("customcssactive");
+            let check = document.createElement("input");
+            check.type = "checkbox";
+            check.id = "customcss-check-menu";
+            check.checked = ison;
+            textarea.disabled=!ison;
+            applybtn.disabled=!ison;
+            if(!ison){
+                applybtn.classList.add("disabled");
+            }
+            check.addEventListener("change",(e)=>{
+                absettings("customcssactive",true,e.target.checked);
+                ison=e.target.checked;
+                textarea.disabled=!ison;
+                applybtn.disabled=!ison
+                if(ison){
+                    applybtn.classList.remove("disabled");
+                    document.getElementById("customusercssabp").innerHTML=absettings("customcss");;
+
+                }else{
+                    applybtn.classList.add("disabled");
+                    document.getElementById("customusercssabp").innerHTML="";
+                }
+            });
+            let label = document.createElement("label");
+            label.innerText = "Custom Css";
+            label.classList.add("hoverpointer");
+            label.setAttribute("for","customcss-check-menu");
+            card.appendChild(label);
+            card.appendChild(check);
+            card.appendChild(document.createElement("br"));}
+
+            textarea.cols="50";
+            textarea.rows="20";
+            textarea.style.resize="vertical";
+            textarea.value=absettings("customcss");
+            
+            card.appendChild(textarea);
+
+            applybtn.innerText="Apply";
+            applybtn.classList.add("primary_button");
+            applybtn.onclick=()=>{
+                absettings("customcss",true,textarea.value);
+                let customcss = document.getElementById("customusercssabp")
+                if(customcss==null){
+                    customcss = document.createElement('style');
+                    customcss.id="customusercssabp";
+                    customcss.innerHTML = styles;
+                    document.body.appendChild(customcss);
+                }
+                customcss.innerHTML=textarea.value;
+            }
+            card.appendChild(applybtn);
+
+
+
+            //         let styleElement = document.createElement('style');
+            // styleElement.innerHTML = styles;
+            // document.body.appendChild(styleElement);
+
+
+
+            card.appendChild(document.createElement("hr"));
+            card.appendChild(document.createElement("br"));
+
+            document.body.appendChild(div);
+            document.body.appendChild(document.createElement("br"));
         }
         // 4th card stats
 
@@ -964,8 +1135,9 @@ function start() {
             card.appendChild(document.createElement("hr"));
             card.appendChild(document.createElement("br"));
             card.appendChild(resetbtn);
-            document.body.insertBefore(div,document.body.childNodes[11]);
-            document.body.insertBefore(document.createElement("br"),document.body.childNodes[12]);
+
+            document.body.appendChild(div);
+            document.body.appendChild(document.createElement("br"));
         }
         // 5th card info
 
@@ -1006,8 +1178,8 @@ function start() {
             card.appendChild(document.createElement("br"));
             card.appendChild(discord);
             card.appendChild(document.createElement("br"));
-            document.body.insertBefore(div,document.body.childNodes[13]);
-            document.body.insertBefore(document.createElement("br"),document.body.childNodes[14]);
+            document.body.appendChild(div);
+            document.body.appendChild(document.createElement("br"));
 
         }
     }
@@ -1092,6 +1264,15 @@ function start() {
                 }
             }
         }
+    }
+
+
+    //custom css
+    if(absettings("customcssactive")){
+        let element = document.createElement('style');
+        element.id="customusercssabp";
+        element.innerHTML = absettings("customcss");
+        document.body.appendChild(element);
     }
 
     if(absettings("displayfollows")){
@@ -1234,6 +1415,8 @@ function customstyle() {
         sheet.insertRule(".abpcstmbtn{cursor:pointer;filter: contrast(0%);width: 2rem;aspect-ratio: 1/1;border: 1px solid gray;border-radius: 5px;margin: 3px;padding: 3px;}", sheet.cssRules.length);
         // selected mode 
         sheet.insertRule(".text_button.selected {border-bottom: 1px solid white;}", sheet.cssRules.length);
+        //remove button for imgs
+        sheet.insertRule(".image-card img.remove {tr;filter: drop-shadow(0px 0px 1px rgba(255, 255, 255, 1.0)) drop-shadow(0px 0px 4px rgba(255, 255, 255, 0.75)) !important;margin:0px;float: right;position: absolute;right: 0px;top: 0px;cursor: pointer;}", sheet.cssRules.length);
 
     }
 }
@@ -1565,9 +1748,9 @@ function displayLikes(likes){
     }
 
     let imageContainer = Imo.imagecontainer;
-    let images = imageContainer.childNodes;
+    let images = imageContainer.children;
     for (let i = 0; i < images.length; i++) {
-        if(images[i].lastChild==null){
+        if(images[i].lastChild==null||images[i].style.display=="none"){
             continue;
         }
         if(images[i].querySelector("#abpluslikedisplay")!=null){
