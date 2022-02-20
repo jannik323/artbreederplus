@@ -55,6 +55,7 @@ let USER;
 let urlsplit = window.location.pathname.split("/");
 USER = urlsplit[urlsplit.length-1];
 }
+let requestingnotif=false;
 
 let Imo= {
 
@@ -166,7 +167,7 @@ function removeblockedimgs(){
                 localStorage.setItem("abplus-blocked-img",JSON.stringify(blockimgs));
                 images[i].style.display="none";
             }
-            images[i].insertBefore(x,images[i].children[0]);
+            images[i].prepend(x);
         }
         
         if(savedblockimg.includes(images[i].getAttribute("data-key"))&&canblockimgs){
@@ -584,7 +585,7 @@ function start() {
         let btn = document.createElement("a");
         btn.innerText = "AB+ Settings";
         btn.href = "/artbreederplus";
-        dropdown.insertBefore(btn,dropdown.childNodes[0]);
+        dropdown.prepend(btn);
     }else{
         dropdown = document.querySelector("div.header-right");
         if(dropdown!=null){
@@ -592,7 +593,7 @@ function start() {
             btn.classList.add("header_option");
             btn.innerText = "AB+ Settings";
             btn.href = "/artbreederplus";
-            dropdown.insertBefore(btn,dropdown.childNodes[0]);
+            dropdown.prepend(btn);
         };
     };
     
@@ -605,11 +606,60 @@ function start() {
     });
     //
 
+    let notibtn = document.querySelector(".notifications")
+    if(notibtn!=null){
+        let link = document.createElement("a");
+        link.href="/abpnotifications";
+        link.classList.add("invislinkabp");
+        notibtn.appendChild(link);
+    }
+
+    //notifications page
+    if(USER=="abpnotifications"){
+
+        cleanpage();
+
+        {//title
+            titlediv = document.createElement("div");
+            titlediv.classList.add("row","title_row");
+            title = document.createElement("h1");
+            title.classList.add("inline");
+            title.innerText="Notifications";
+            titlediv.appendChild(title);
+            document.body.appendChild(titlediv);
+        }
+
+        let list = document.createElement("ul");
+        list.style.height =" 80%";
+        list.style.listStyle="none";
+        list.style.padding="0px";
+        document.body.appendChild(list);
+        requestingnotif = false;
+
+        window.addEventListener('scroll', function() {
+            if(!requestingnotif&&window.pageYOffset+window.innerHeight>document.body.clientHeight-500){
+                getnotifications(list,list.childElementCount);
+                requestingnotif=true;
+                console.log(list.childElementCount);
+            }
+        });
+        getnotifications(list);
+
+
+    }
+
     // ab+ page
     if(USER=="artbreederplus"){
-        let abplustitle = document.querySelector(".row.title_row h1");
-        if(abplustitle!=null){
-            abplustitle.innerText ="Artbreeder+ Settings";
+        cleanpage();
+
+        {//title
+            titlediv = document.createElement("div");
+            titlediv.classList.add("row","title_row");
+            title = document.createElement("h1");
+            title.classList.add("inline");
+            title.innerText="Artbreeder+ Settings";
+            titlediv.appendChild(title);
+            document.body.appendChild(titlediv);
         }
         //first card darkmode
         {
@@ -1210,6 +1260,7 @@ function start() {
         list.appendChild(blockeduser);
     }
 
+
     //block button stuff
     let profilediv = document.querySelector("div.top_row div.profile div.buttons_container");
     if(profilediv!=null){
@@ -1417,6 +1468,19 @@ function customstyle() {
         sheet.insertRule(".text_button.selected {border-bottom: 1px solid white;}", sheet.cssRules.length);
         //remove button for imgs
         sheet.insertRule(".image-card img.remove {tr;filter: drop-shadow(0px 0px 1px rgba(255, 255, 255, 1.0)) drop-shadow(0px 0px 4px rgba(255, 255, 255, 0.75)) !important;margin:0px;float: right;position: absolute;right: 0px;top: 0px;cursor: pointer;}", sheet.cssRules.length);
+        //
+        sheet.insertRule(".abpnotification{background-color: white;display:flex;flex;flex-direction:row;border: 1px solid white; margin: 1rem; justify-content: left;}", sheet.cssRules.length);
+        sheet.insertRule(".abpnotification div.userdiv{height:100px;width:100px;position:relative;}", sheet.cssRules.length);
+        sheet.insertRule(".abpnotification div.userdiv img{border-radius :50px ;width:100px;position:absolute;}", sheet.cssRules.length);
+        sheet.insertRule(".abpnotification div.userdiv span{bottom: 0px;text-align: center;width:100px;position:absolute;text-shadow:0px 0px 1px black}", sheet.cssRules.length);
+        sheet.insertRule(".abpnotification div.typediv{width:max-content; display:flex;justify-content:center;align-items:center; flex-wrap:wrap;}", sheet.cssRules.length);
+        sheet.insertRule(".abpnotification div.typediv span{margin:1rem;}", sheet.cssRules.length);
+        sheet.insertRule(".abpnotification div.imgdiv{ display:flex; align-items:center;}", sheet.cssRules.length);
+        sheet.insertRule(".abpnotification div.imgdiv img{height:100px;}", sheet.cssRules.length);
+        sheet.insertRule(".abpnotification div.imgdiv span{margin:1rem;}", sheet.cssRules.length);
+        //
+        // infislink
+        sheet.insertRule(".invislinkabp{width: 100%;height: 100%;position: absolute;top: 0px;left: 0px;}", sheet.cssRules.length);
 
     }
 }
@@ -1564,7 +1628,7 @@ function enabledarkmode(){
     sheet = element.sheet;
     sheet.insertRule(".dropdown-content a,*,a,.header_option{color:#898989;}", sheet.cssRules.length);
     sheet.insertRule(".recent-tag,#image-tag-popup,.social,.notification,body,.modal-content{background:"+color+";}", sheet.cssRules.length);
-    sheet.insertRule(".container,.text-container-inner,#image-group-selector,.model, .method,.button-group .option.selected,.card,.text-imagecontainer-inner,.dropdown-content,.taginfo,.usergene-info,.gene_controller,.user-pill,.header{background:"+shadeColor(color,-70)+";}", sheet.cssRules.length);
+    sheet.insertRule(".abpnotification,.container,.text-container-inner,#image-group-selector,.model, .method,.button-group .option.selected,.card,.text-imagecontainer-inner,.dropdown-content,.taginfo,.usergene-info,.gene_controller,.user-pill,.header{background:"+shadeColor(color,-70)+";}", sheet.cssRules.length);
     sheet.insertRule(".image-tag,select,#preview,input,.button-group .option{background:#333;}", sheet.cssRules.length);
     sheet.insertRule(".gene_controller img{background:#999; border-radius:5px}", sheet.cssRules.length);
     sheet.insertRule("img[src='/image/loading_spinner.gif']{filter: invert(100%);}", sheet.cssRules.length)
@@ -1772,7 +1836,140 @@ function displayLikes(likes){
         }
         if(likeam===null){likeam=0}
         likeHTML.innerText  = likeam;
-        images[i].lastChild.firstChild.insertBefore(likeHTML,images[i].lastChild.firstChild.childNodes[0]);
+        images[i].lastChild.firstChild.prepend(likeHTML);
         
     }
+}
+
+function getnotifications(list,offset=0){
+    let PARA = {};
+        PARA.method="POST"
+        PARA.headers=reqheader;
+        PARA.body=JSON.stringify({
+            limit:20,
+            offset:offset,
+        });
+        fetch("https://www.artbreeder.com/get_notifications",PARA)
+        .then(response => {
+        if (!response.ok) {throw new Error("HTTP error " + response.status);}
+        return response.json();})
+        .then(data=>{
+            createnotis(list,data);
+        })
+        .catch(err=>{console.error(err)});
+}
+
+function createnotis(list,data){
+    let savedblock = JSON.parse(localStorage.getItem("abplus-blocked"));
+    data.forEach(e=>{
+        if(savedblock.includes(e.username)){
+            let blocked = document.createElement("li");
+            blocked.innerText="blocked";
+            blocked.style.display="none";
+            list.appendChild(blocked);
+            return;
+        };
+        createnoti(list,e.type,e.created_at,e.time_string,e.is_new,e.key,e.username,e.profile_img_key,e.data);
+    })
+    requestingnotif=false;
+}
+
+function createnoti(list,type,date,time_string,isnew,key,username,userprofile,newkey){
+    
+    if(newkey!=null){
+        newkey=newkey.child_key;
+    }
+    let noti = document.createElement("li");
+    noti.classList.add("abpnotification");
+    let userdiv = document.createElement("div");
+    userdiv.classList.add("userdiv");
+    userdiv.classList.add("hoverpointer");
+    userdiv.onclick=()=>{window.open("/"+username)};
+    let userimg = document.createElement("img");
+    let usernamespan = document.createElement("span");
+    if(userprofile==null){
+        userimg.src = "https://www.artbreeder.com/image/empty.png";
+        usernamespan.style.bottom="40%";
+    }else{
+        userimg.src = "https://artbreeder.b-cdn.net/imgs/"+userprofile+"_small.jpeg?height=100";
+    }
+    userdiv.appendChild(userimg);
+    usernamespan.innerText = username;
+    userdiv.appendChild(usernamespan);
+    noti.appendChild(userdiv);
+
+    let typediv = document.createElement("div");
+    typediv.classList.add("typediv");
+
+    let typespan = document.createElement("span");
+    switch(type){
+        case 1: // like
+        typespan.innerText="liked your image ";
+        break;
+        case 2: // follow
+        typespan.innerText="followed you ";
+        break;
+        case 3: // breed
+        typespan.innerText="has bred your image ";
+        break;
+    }
+    typediv.appendChild(typespan);
+
+    let typetime = document.createElement("span");
+    typetime.innerText = time_string;
+    typediv.appendChild(typetime);
+    noti.appendChild(typediv);
+
+    let imgdiv = document.createElement("div");
+    imgdiv.classList.add("imgdiv");
+    let oldimg = document.createElement("img");
+    oldimg.classList.add("hoverpointer");
+    let newimg = document.createElement("img");
+    newimg.classList.add("hoverpointer");
+    switch(type){
+        case 1:
+            oldimg.src = "https://artbreeder.b-cdn.net/imgs/"+key+"_small.jpeg?height=100";
+            oldimg.onclick=()=>{window.open("/i?k="+key)};
+            imgdiv.appendChild(oldimg);
+            noti.appendChild(imgdiv);
+            break;
+        case 2:
+            break;
+        case 3:
+            oldimg.src = "https://artbreeder.b-cdn.net/imgs/"+key+"_small.jpeg?height=100";
+            oldimg.onclick=()=>{window.open("/i?k="+key)};
+            imgdiv.appendChild(oldimg);
+
+            let arrow = document.createElement("span");
+            arrow.innerText="→";
+            imgdiv.appendChild(arrow);
+
+            newimg.src = "https://artbreeder.b-cdn.net/imgs/"+newkey+"_small.jpeg?height=100";
+            oldimg.onclick=()=>{window.open("/i?k="+newkey)};
+            imgdiv.appendChild(newimg);
+            noti.appendChild(imgdiv);
+            break;
+    }
+
+    if(isnew){
+        noti.style.border="1px solid green";
+    }
+    
+    list.appendChild(noti);
+
+}
+
+function cleanpage(){
+    let repeat =false;
+        do{
+            let bodychildren = document.body.children;
+            repeat =false;
+            for (let i = 0; i < bodychildren.length; i++) {
+            if(bodychildren[i].classList.contains("header")||bodychildren[i].nodeName==="SCRIPT"||bodychildren[i].nodeName==="STYLE"){
+                    continue;
+                };
+                repeat=true;
+                bodychildren[i].remove();
+            }
+        }while(repeat);
 }
