@@ -606,7 +606,7 @@ function start() {
     });
     //
 
-    let notibtn = document.querySelector(".notifications")
+    let notibtn = document.querySelector(".notifications").firstChild;
     if(notibtn!=null){
         let link = document.createElement("a");
         link.href="/abpnotifications";
