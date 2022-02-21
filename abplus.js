@@ -8,6 +8,8 @@ let defaultsettings = {
     darkmodecolor:"#222222",
     customcss:"",
     customcssactive:false,
+    sliderform:"normal",
+    convertslider:false,
 }
 { // check default 
     let settings =  JSON.parse(localStorage.getItem("abplus-settings"));
@@ -51,10 +53,8 @@ if(absettings("darkmode")){
 }
 
 let USER;
-{
 let urlsplit = window.location.pathname.split("/");
 USER = urlsplit[urlsplit.length-1];
-}
 let requestingnotif=false;
 
 let Imo= {
@@ -614,6 +614,70 @@ function start() {
         notibtn.appendChild(link);
     }
 
+    // slider change
+    let upperpath = urlsplit[urlsplit.length-2];
+    if(USER=="i"||upperpath=="mix"||upperpath=="compose"||upperpath=="create_gene"){
+        let form = absettings("sliderform");
+        if(form!="normal"){
+            let isconvert = absettings("convertslider");
+            let convertloop;
+            if(isconvert){
+                convert();
+                convertloop = setInterval(()=>{ // lazy way of converting new sliders lol
+                    convert();
+                },500)
+            }
+            if(form=="toggle"){
+                let slidertoggle = document.createElement("div");
+                slidertoggle.id="togglebtnslider";
+                slidertoggle.classList.add("hoverpointer");
+                slidertoggle.classList.add("delete");
+                let toggle = document.createElement("span");
+                toggle.innerText="SLIDER";
+                if(isconvert){
+                    toggle.innerText="NUMBER";
+                }
+
+                slidertoggle.onclick=()=>{
+                    if(toggle.innerText=="NUMBER"){
+                        toggle.innerText="SLIDER"
+                        clearInterval(convertloop);
+                        convert(false);
+                        absettings("convertslider",true,false);
+                    }else{
+                        toggle.innerText="NUMBER";
+                        convert();
+                        convertloop = setInterval(()=>{
+                            convert();
+                        },500)
+                        absettings("convertslider",true,true);
+                    }
+                }
+                
+                slidertoggle.appendChild(toggle)
+                document.body.appendChild(slidertoggle);
+
+            }
+        }
+        function convert(state=true){
+            if(state){
+                let sliders = document.querySelectorAll("input[type='range']");
+                sliders.forEach(e=>{
+                    e.type="number";
+                    e.setAttribute("abpconverted","number");
+                    e.style.height="20px";
+                })
+            }else{
+                sliders = document.querySelectorAll("input[abpconverted='number']");
+                sliders.forEach(e=>{
+                    e.type="range";
+                    e.setAttribute("abpconverted","range");
+                    e.style.height="5px";
+                })
+            }
+        }
+    }
+
     //notifications page
     if(USER=="abpnotifications"){
 
@@ -1061,6 +1125,92 @@ function start() {
 
         }
 
+        // 3.25 card sliders
+        {
+            let div = document.createElement("div");
+            div.classList.add("row");
+            div.classList.add("title_row");
+            let card = document.createElement("div");
+            card.classList.add("row_element");
+            card.classList.add("card");
+            div.appendChild(card);
+
+            let title = document.createElement("h3");
+            title.innerText ="Slider Settings";
+            title.style.marginTop ="0px";
+            card.appendChild(title);
+            card.appendChild(document.createElement("hr"));
+
+            let select = document.createElement("select");
+            select.id = "sliderform-select-menu";
+        
+            select.addEventListener("change",(e)=>{
+                absettings("sliderform",true,e.target.value);
+                switch(e.target.value){
+                    case "normal":
+                        optiontext.innerText=" Ab+ makes no changes and all sliders remain as sliders.";
+                        absettings("convertslider",true,false);
+                        break;
+                    case "number":
+                        optiontext.innerText="All sliders get turned into number inputs.";
+                        absettings("convertslider",true,true);
+                        break;
+                    case "toggle":
+                        optiontext.innerText="All sliders get turned into number inputs , if you click the toggle button. You can change them back to sliders by clicking the button again."
+                        absettings("convertslider",true,false);
+                        break;
+                }
+            });
+
+            let options = ["normal","number","toggle"];
+            options.forEach(e=>{
+                let op =  document.createElement("option");
+                op.value=e;
+                op.innerText=e;
+                select.appendChild(op);
+            })
+            let label = document.createElement("label");
+            label.innerText = "Slider Form: ";
+            label.setAttribute("for","sliderform-select-menu");
+            card.appendChild(label);
+            card.appendChild(select);
+            card.appendChild(document.createElement("br"));
+
+            let optiontext=document.createElement("p");
+            select.value = absettings("sliderform");
+            switch(select.value){
+                case "normal":
+                    optiontext.innerText=" Ab+ makes no changes and all sliders remain as sliders.";
+                    break;
+                case "number":
+                    optiontext.innerText="All sliders get turned into number inputs.";
+                    break;
+                case "toggle":
+                    optiontext.innerText="All sliders get turned into number inputs , if you click the toggle button. You can change them back to sliders by clicking the button again."
+                    break;
+            }
+            card.appendChild(optiontext);
+            card.appendChild(document.createElement("br"));
+            
+
+            card.appendChild(document.createElement("hr"));
+
+            let resetbtn = document.createElement("button");
+            resetbtn.innerText = "Reset";
+            resetbtn.classList.add("primary_button");
+            resetbtn.addEventListener("click",()=>{
+                absettings("sliderform",true,defaultsettings.sliderform);
+                document.getElementById("sliderform-select-menu").value=defaultsettings.sliderform;
+            })
+            card.appendChild(resetbtn);
+            
+            
+
+            document.body.appendChild(div);
+            document.body.appendChild(document.createElement("br"));
+
+        }
+
         // 3.5th card custom css
 
         {
@@ -1361,7 +1511,7 @@ function start() {
     }
 
     let imagescontainer;
-    if(USER=="browse"||USER=="i"){
+    if(USER=="browse"||USER=="i"||urlsplit[urlsplit.length-2]=="compose"){
         imagescontainer = document.querySelector("div.children_container");
     }else{
         imagescontainer = document.querySelector("div#images div.children_container");
@@ -1481,6 +1631,11 @@ function customstyle() {
         //
         // infislink
         sheet.insertRule(".invislinkabp{width: 100%;height: 100%;position: absolute;top: 0px;left: 0px;}", sheet.cssRules.length);
+        // toggle button slider
+        sheet.insertRule("#togglebtnslider{transition:opacity 1s;opacity:0.2;position: fixed;width: 60px;height: 60px;background: #222;border: 2px solid white;border-radius: 0px 30px 0px 0px;bottom: 0px;left: 0px; border-left: none;border-bottom: none; display:flex; align-items:center; justify-content:center;}", sheet.cssRules.length);
+        sheet.insertRule("#togglebtnslider:hover{opacity:1}", sheet.cssRules.length);
+        sheet.insertRule("#togglebtnslider span{width: 40px;height: 40px;background: #444;border-radius:50%; text-align: center;padding: 15px 0; font-size: 8px;}", sheet.cssRules.length);
+
 
     }
 }
@@ -1627,8 +1782,8 @@ function enabledarkmode(){
     document.head.appendChild(element);
     sheet = element.sheet;
     sheet.insertRule(".dropdown-content a,*,a,.header_option{color:#898989;}", sheet.cssRules.length);
-    sheet.insertRule(".recent-tag,#image-tag-popup,.social,.notification,body,.modal-content{background:"+color+";}", sheet.cssRules.length);
-    sheet.insertRule(".abpnotification,.container,.text-container-inner,#image-group-selector,.model, .method,.button-group .option.selected,.card,.text-imagecontainer-inner,.dropdown-content,.taginfo,.usergene-info,.gene_controller,.user-pill,.header{background:"+shadeColor(color,-70)+";}", sheet.cssRules.length);
+    sheet.insertRule("#togglebtnslider span,.recent-tag,#image-tag-popup,.social,.notification,body,.modal-content{background:"+color+";}", sheet.cssRules.length);
+    sheet.insertRule("#togglebtnslider,.abpnotification,.container,.text-container-inner,#image-group-selector,.model, .method,.button-group .option.selected,.card,.text-imagecontainer-inner,.dropdown-content,.taginfo,.usergene-info,.gene_controller,.user-pill,.header{background:"+shadeColor(color,-70)+";}", sheet.cssRules.length);
     sheet.insertRule(".image-tag,select,#preview,input,.button-group .option{background:#333;}", sheet.cssRules.length);
     sheet.insertRule(".gene_controller img{background:#999; border-radius:5px}", sheet.cssRules.length);
     sheet.insertRule("img[src='/image/loading_spinner.gif']{filter: invert(100%);}", sheet.cssRules.length)
@@ -1756,6 +1911,19 @@ function getlikes(){
         const id = urlParams.get('k');
         PARA.body = JSON.stringify({
             "image_key":id,
+            "limit":Imo.likechecksize,
+            "offset":Imo.likecheckoffset,
+        });
+    }else if(urlsplit[urlsplit.length-2]=="compose"){
+        URL= "https://www.artbreeder.com/images";
+        // console.log(window.username); doesnt work... maybe my script is too fast ? idk
+        let model = Imo.imagecontainer.classList[1]; // ignore this stuff.. i had to find out the username and stuff in a weird way.
+        let usernamearr = document.querySelector(".header-right").lastChild.href.split("/");
+        let username = usernamearr[usernamearr.length-1];
+        PARA.body = JSON.stringify({
+            creation_type:6,
+            models:[model],
+            creator: username,
             "limit":Imo.likechecksize,
             "offset":Imo.likecheckoffset,
         });
