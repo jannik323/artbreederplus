@@ -713,7 +713,6 @@ function start() {
             if(!requestingnotif&&window.pageYOffset+window.innerHeight>document.body.clientHeight-500){
                 getnotifications(list,list.childElementCount);
                 requestingnotif=true;
-                console.log(list.childElementCount);
             }
         });
         getnotifications(list);

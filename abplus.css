@@ -173,6 +173,7 @@
 .abpnotification div.userdiv img {
     border-radius: 50px;
     width: 100px;
+    height: 100px;
     position: absolute;
 }
 
