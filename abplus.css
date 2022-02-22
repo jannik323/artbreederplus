@@ -1,0 +1,253 @@
+.header a.logo span {
+    transition: color .5s
+}
+
+.header a.logo span:hover {
+    color: white
+}
+
+/* remove weird scrollbars */
+.profile_nav,
+.buttons_container {
+    overflow: auto !important
+}
+
+/* selector shit */
+#abplus-masstag-input {
+    border: none;
+    background: transparent;
+    text-align: center;
+    width: 100px;
+}
+
+#abplus-masstag-input:focus-visible {
+    outline: none;
+}
+
+/* block btn  */
+#block_button {
+    margin-left: 1rem;
+    background: red;
+}
+
+.card {
+    width: 500px;
+    background-color: white;
+    box-shadow: 0 4px 4px 0 rgba(0, 0, 0, 0.1);
+    border-radius: 5px;
+    padding: 20px;
+}
+
+.row_element {
+    display: inline-block;
+    max-width: 450px;
+}
+
+/* blockeduserlist */
+.blockeduser {
+    display: flex;
+    align-items: center;
+    list-style-type: none;
+    background: rgba(67, 64, 64, 0.58);
+    margin: 1rem;
+}
+
+.blockeduser button {
+    margin-left: auto;
+}
+
+.blockeduser span {
+    margin-left: 1rem;
+}
+
+.blockeduser span:hover {
+    cursor: pointer
+}
+
+/* X something */
+.Xsomething::after {
+    content: url(/svg/x_s1.svg);
+    width: 100%;
+    height: 100%;
+    scale: 2.5;
+    justify-content: center;
+    align-items: center;
+    display: flex;
+}
+
+/* hover */
+.hoverpointer {
+    cursor: pointer
+}
+
+/* top img contaienr thingy */
+.abpbtm {
+    display: flex;
+    gap: 9px;
+}
+
+.placeab {
+    filter: drop-shadow(0 0 1px black);
+}
+
+.modal,
+#abptopmodal.modal-body {
+    overflow: hidden !important;
+}
+
+#abptopmodal.modal-content {
+    height: 96%;
+}
+
+.abpheader {
+    font-size: 2rem;
+}
+
+#abptopmodal .modal-body .images_container {
+    max-height: 70vh;
+    overflow: hidden auto;
+}
+
+/* custom btns for download and upload at blocked users */
+.abpcstmbtn {
+    cursor: pointer;
+    filter: contrast(0%);
+    width: 2rem;
+    aspect-ratio: 1/1;
+    border: 1px solid gray;
+    border-radius: 5px;
+    margin: 3px;
+    padding: 3px;
+}
+
+/* selected mode  */
+.text_button.selected {
+    border-bottom: 1px solid white;
+}
+
+/* remove button for imgs */
+.image-card img.remove {
+    filter: drop-shadow(0px 0px 1px rgba(255, 255, 255, 1.0)) drop-shadow(0px 0px 4px rgba(255, 255, 255, 0.75)) !important;
+    margin: 0px;
+    float: right;
+    position: absolute;
+    right: 0px;
+    top: 0px;
+    cursor: pointer;
+}
+
+/*  */
+.abpnotiholder {
+    list-style: none;
+    padding: 0px;
+    display: flex;
+    align-items: center;
+    flex-direction: column
+}
+
+@media only screen and (max-width: 550px) {
+    .abpnotification {
+        flex-direction: column !important;
+        min-width: min-content !important;
+    }
+}
+
+.abpnotification {
+    background-color: white;
+    display: flex;
+    flex-direction: row;
+    border: 1px solid white;
+    margin: 1rem;
+    justify-content: left;
+    width: 75%;
+    min-width: 550px;
+    max-width: 800px
+}
+
+.abpnotification div.userdiv {
+    height: 100px;
+    width: 100px;
+    position: relative;
+}
+
+.abpnotification div.userdiv img {
+    border-radius: 50px;
+    width: 100px;
+    position: absolute;
+}
+
+.abpnotification div.userdiv span {
+    bottom: 0px;
+    text-align: center;
+    width: 100px;
+    position: absolute;
+    text-shadow: 0px 0px 1px black
+}
+
+.abpnotification div.typediv {
+    width: max-content;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.abpnotification div.typediv span {
+    margin: 1rem;
+}
+
+.abpnotification div.imgdiv {
+    display: flex;
+    align-items: center;
+}
+
+.abpnotification div.imgdiv img {
+    height: 100px;
+}
+
+.abpnotification div.imgdiv span {
+    margin: 1rem;
+}
+
+/*  */
+/* infislink */
+.invislinkabp {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0px;
+    left: 0px;
+}
+
+/* toggle button slider */
+#togglebtnslider {
+    transition: opacity 1s;
+    opacity: 0.2;
+    position: fixed;
+    width: 60px;
+    height: 60px;
+    background: #222;
+    border: 2px solid white;
+    border-radius: 0px 30px 0px 0px;
+    bottom: 0px;
+    left: 0px;
+    border-left: none;
+    border-bottom: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#togglebtnslider:hover {
+    opacity: 1
+}
+
+#togglebtnslider span {
+    width: 40px;
+    height: 40px;
+    background: #444;
+    border-radius: 50%;
+    text-align: center;
+    padding: 15px 0;
+    font-size: 8px;
+}

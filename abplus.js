@@ -45,8 +45,6 @@ let defaultsettings = {
     }
 }
 
-// abp style stuff
-customstyle();
 
 if(absettings("darkmode")){
     enabledarkmode();
@@ -122,7 +120,10 @@ const reqheader = {
     "Accept": "application/json",
     "Content-Type": "application/json",
 };
+
+
 start();
+
 
 function addclickEvent(){
     let imageContainer = Imo.imagecontainer;
@@ -133,11 +134,14 @@ function addclickEvent(){
             images[i].addEventListener("click",e=>{
                 if(e.altKey){
                     images[i].classList.toggle("selected");
+                    // window.group_selector.imageClick(e.target);
                 }
             })
         }
     }
 }
+
+
     
 function removeblockedimgs(){
     let savedblock = JSON.parse(localStorage.getItem("abplus-blocked"));
@@ -694,9 +698,14 @@ function start() {
         }
 
         let list = document.createElement("ul");
+        list.classList.add("abpnotiholder");
         list.style.height =" 80%";
         list.style.listStyle="none";
         list.style.padding="0px";
+        list.style.display="flex";
+        list.style.alignItems="center"
+        list.style.flexDirection="column"
+
         document.body.appendChild(list);
         requestingnotif = false;
 
@@ -742,11 +751,7 @@ function start() {
             input.value = absettings("darkmodecolor");
             input.addEventListener("change",e=>{
                 absettings("darkmodecolor",true,e.target.value);
-                let element = document.getElementById("darkmodestylesheet");
-                if(element==null)return;
-                let sheet = element.sheet;
-                sheet.cssRules[1].style.background = e.target.value;
-                sheet.cssRules[2].style.background = shadeColor(e.target.value,-70);
+                changedarkmode();
                 let isokay = confirm("Do you want to overwrite the website link on your profile page in order to share your color theme with other visitors ?");
                 if(isokay){addcolorsafe(e.target.value);}
             })
@@ -763,11 +768,7 @@ function start() {
                 let color = "#222222"
                 input.value=color;
                 absettings("darkmodecolor",true,color);
-                let element = document.getElementById("darkmodestylesheet");
-                if(element==null)return;
-                let sheet = element.sheet;
-                sheet.cssRules[1].style.background = color;
-                sheet.cssRules[2].style.background = shadeColor(color,-70);
+                changedarkmode();
                 let isokay = confirm("Do you want to overwrite the website link on your profile page in order to share your color theme with other visitors ?");
                 if(isokay){addcolorsafe(color);}
             })
@@ -1457,9 +1458,7 @@ function start() {
                 let color = linksplit[linksplit.length-1];
                 if(color[0]== "#"){
                     colorlink.style.opacity ="0.5";
-                    let sheet = element.sheet;
-                    sheet.cssRules[1].style.background = color;
-                    sheet.cssRules[2].style.background = shadeColor(color,-70);
+                    changedarkmode(element)
                 }else{
                     console.log("not a ab+ user / not a ab+ color link")
                 }
@@ -1576,68 +1575,6 @@ function start() {
     
     //
 
-}
-
-function customstyle() {
-    {
-        let element = document.createElement('style'), sheet;
-        element.id = "abpcustomstyle";
-        document.head.appendChild(element);
-        sheet = element.sheet;
-        //logo
-        sheet.insertRule(".header a.logo span{transition:color .5s }", sheet.cssRules.length);
-        sheet.insertRule(".header a.logo span:hover{color:white }", sheet.cssRules.length);
-        //remove weird scrollbars
-        sheet.insertRule(".profile_nav,.buttons_container{overflow:auto !important}", sheet.cssRules.length);
-        //selector shit
-        sheet.insertRule("#abplus-masstag-input{border: none; background: transparent;text-align: center;width: 100px;}", sheet.cssRules.length);
-        sheet.insertRule("#abplus-masstag-input:focus-visible{outline: none;}", sheet.cssRules.length);
-        //block btn 
-        sheet.insertRule("#block_button{margin-left:1rem; background:red;}", sheet.cssRules.length);
-        sheet.insertRule(".card{width: 500px;background-color: white;box-shadow: 0 4px 4px 0 rgba(0, 0, 0, 0.1);border-radius: 5px;padding: 20px;}", sheet.cssRules.length);
-        sheet.insertRule(".row_element{display: inline-block;max-width: 450px;}", sheet.cssRules.length);
-        //blockeduserlist
-        sheet.insertRule(".blockeduser{display:flex;align-items:center;list-style-type: none; background: rgba(67, 64, 64, 0.58); margin: 1rem;}", sheet.cssRules.length);
-        sheet.insertRule(".blockeduser button{margin-left: auto;}", sheet.cssRules.length);
-        sheet.insertRule(".blockeduser span{margin-left:1rem;}", sheet.cssRules.length);
-        sheet.insertRule(".blockeduser span:hover{cursor:pointer}", sheet.cssRules.length);
-        // X something
-        sheet.insertRule(".Xsomething::after{content: url(/svg/x_s1.svg);width: 100%;height: 100%;scale: 2.5;justify-content: center;align-items: center;display: flex;}", sheet.cssRules.length);
-        //hover
-        sheet.insertRule(".hoverpointer{cursor:pointer}", sheet.cssRules.length);
-        // top img contaienr thingy
-        sheet.insertRule(".abpbtm{display:flex; gap: 9px;}", sheet.cssRules.length);
-        sheet.insertRule(".placeab{filter: drop-shadow(0 0 1px black);}", sheet.cssRules.length);
-        sheet.insertRule(".modal,#abptopmodal.modal-body{overflow: hidden !important;}", sheet.cssRules.length);
-        sheet.insertRule("#abptopmodal.modal-content{height: 96%;}", sheet.cssRules.length);
-        sheet.insertRule(".abpheader{font-size:2rem;}", sheet.cssRules.length);
-        sheet.insertRule("#abptopmodal .modal-body .images_container {max-height: 70vh;overflow: hidden auto;}", sheet.cssRules.length);
-        //custom btns for download and upload at blocked users
-        sheet.insertRule(".abpcstmbtn{cursor:pointer;filter: contrast(0%);width: 2rem;aspect-ratio: 1/1;border: 1px solid gray;border-radius: 5px;margin: 3px;padding: 3px;}", sheet.cssRules.length);
-        // selected mode 
-        sheet.insertRule(".text_button.selected {border-bottom: 1px solid white;}", sheet.cssRules.length);
-        //remove button for imgs
-        sheet.insertRule(".image-card img.remove {tr;filter: drop-shadow(0px 0px 1px rgba(255, 255, 255, 1.0)) drop-shadow(0px 0px 4px rgba(255, 255, 255, 0.75)) !important;margin:0px;float: right;position: absolute;right: 0px;top: 0px;cursor: pointer;}", sheet.cssRules.length);
-        //
-        sheet.insertRule(".abpnotification{background-color: white;display:flex;flex;flex-direction:row;border: 1px solid white; margin: 1rem; justify-content: left;}", sheet.cssRules.length);
-        sheet.insertRule(".abpnotification div.userdiv{height:100px;width:100px;position:relative;}", sheet.cssRules.length);
-        sheet.insertRule(".abpnotification div.userdiv img{border-radius :50px ;width:100px;position:absolute;}", sheet.cssRules.length);
-        sheet.insertRule(".abpnotification div.userdiv span{bottom: 0px;text-align: center;width:100px;position:absolute;text-shadow:0px 0px 1px black}", sheet.cssRules.length);
-        sheet.insertRule(".abpnotification div.typediv{width:max-content; display:flex;justify-content:center;align-items:center; flex-wrap:wrap;}", sheet.cssRules.length);
-        sheet.insertRule(".abpnotification div.typediv span{margin:1rem;}", sheet.cssRules.length);
-        sheet.insertRule(".abpnotification div.imgdiv{ display:flex; align-items:center;}", sheet.cssRules.length);
-        sheet.insertRule(".abpnotification div.imgdiv img{height:100px;}", sheet.cssRules.length);
-        sheet.insertRule(".abpnotification div.imgdiv span{margin:1rem;}", sheet.cssRules.length);
-        //
-        // infislink
-        sheet.insertRule(".invislinkabp{width: 100%;height: 100%;position: absolute;top: 0px;left: 0px;}", sheet.cssRules.length);
-        // toggle button slider
-        sheet.insertRule("#togglebtnslider{transition:opacity 1s;opacity:0.2;position: fixed;width: 60px;height: 60px;background: #222;border: 2px solid white;border-radius: 0px 30px 0px 0px;bottom: 0px;left: 0px; border-left: none;border-bottom: none; display:flex; align-items:center; justify-content:center;}", sheet.cssRules.length);
-        sheet.insertRule("#togglebtnslider:hover{opacity:1}", sheet.cssRules.length);
-        sheet.insertRule("#togglebtnslider span{width: 40px;height: 40px;background: #444;border-radius:50%; text-align: center;padding: 15px 0; font-size: 8px;}", sheet.cssRules.length);
-
-
-    }
 }
 
 function addcolorsafe(color){
@@ -1782,8 +1719,8 @@ function enabledarkmode(){
     document.head.appendChild(element);
     sheet = element.sheet;
     sheet.insertRule(".dropdown-content a,*,a,.header_option{color:#898989;}", sheet.cssRules.length);
-    sheet.insertRule("#togglebtnslider span,.recent-tag,#image-tag-popup,.social,.notification,body,.modal-content{background:"+color+";}", sheet.cssRules.length);
-    sheet.insertRule("#togglebtnslider,.abpnotification,.container,.text-container-inner,#image-group-selector,.model, .method,.button-group .option.selected,.card,.text-imagecontainer-inner,.dropdown-content,.taginfo,.usergene-info,.gene_controller,.user-pill,.header{background:"+shadeColor(color,-70)+";}", sheet.cssRules.length);
+    sheet.insertRule("#togglebtnslider span,.recent-tag,#image-tag-popup,.social,.notification,body,.modal-content{background:"+color+" !important;}", sheet.cssRules.length);
+    sheet.insertRule("#togglebtnslider,.abpnotification,.container,.text-container-inner,#image-group-selector,.model, .method,.button-group .option.selected,.card,.text-imagecontainer-inner,.dropdown-content,.taginfo,.usergene-info,.gene_controller,.user-pill,.header{background:"+shadeColor(color,-70)+" !important;}", sheet.cssRules.length);
     sheet.insertRule(".image-tag,select,#preview,input,.button-group .option{background:#333;}", sheet.cssRules.length);
     sheet.insertRule(".gene_controller img{background:#999; border-radius:5px}", sheet.cssRules.length);
     sheet.insertRule("img[src='/image/loading_spinner.gif']{filter: invert(100%);}", sheet.cssRules.length)
@@ -1791,6 +1728,23 @@ function enabledarkmode(){
     sheet.insertRule(".repeat,.taginfo img,.user-links img{filter: drop-shadow(0px 0px 1px rgba(255, 255, 255, 1.0)) drop-shadow(0px 0px 4px rgba(255, 255, 255, 0.75)); background: none !important;}",sheet.cssRules.length)
 }
 
+function changedarkmode(element=null){
+    if(element==null){
+        element=document.getElementById("darkmodestylesheet")
+    }
+    if(element==null)return;
+    let color = absettings("darkmodecolor");
+    let sheet = element.sheet;
+    sheet.cssRules[1].style.setProperty("background",color,"important");
+    sheet.cssRules[2].style.setProperty("background",shadeColor(color,-70),"important");
+    // sheet.cssRules[1].style.setPro = color ;
+    // sheet.cssRules[2].style.background = shadeColor(color,-70)+" !important;";
+}
+
+function disabledarkmode(){
+    let darkmodes = document.querySelectorAll("#darkmodestylesheet")
+    darkmodes.forEach(e=>{e.remove()});
+}
 function shadeColor(color, percent) {
     // credits to this kind person below
     // https://stackoverflow.com/a/13532993
@@ -1809,10 +1763,6 @@ function shadeColor(color, percent) {
     return "#"+RR+GG+BB;
 }
 
-function disabledarkmode(){
-    let darkmodes = document.querySelectorAll("#darkmodestylesheet")
-    darkmodes.forEach(e=>{e.remove()});
-}
 
 function getfilter(mode="browse"){
     filters={};
@@ -2141,3 +2091,4 @@ function cleanpage(){
             }
         }while(repeat);
 }
+
