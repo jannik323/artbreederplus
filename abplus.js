@@ -2062,7 +2062,7 @@ function createnoti(list,type,date,time_string,isnew,key,username,userprofile,ne
             imgdiv.appendChild(arrow);
 
             newimg.src = "https://artbreeder.b-cdn.net/imgs/"+newkey+"_small.jpeg?height=100";
-            oldimg.onclick=()=>{window.open("/i?k="+newkey)};
+            newimg.onclick=()=>{window.open("/i?k="+newkey)};
             imgdiv.appendChild(newimg);
             noti.appendChild(imgdiv);
             break;
