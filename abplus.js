@@ -10,6 +10,7 @@ let defaultsettings = {
     customcssactive:false,
     sliderform:"normal",
     convertslider:false,
+    negativegenes:true,
 }
 { // check default 
     let settings =  JSON.parse(localStorage.getItem("abplus-settings"));
@@ -682,6 +683,12 @@ function start() {
         }
     }
 
+    if(upperpath=="create_gene"){
+        if(absettings("negativegenes")){
+            document.getElementById("negative-images").classList.remove("hidden");
+        }
+    }
+
     //notifications page
     if(USER=="abpnotifications"){
 
@@ -1080,6 +1087,23 @@ function start() {
             card.appendChild(check);
             card.appendChild(document.createElement("br"));}
 
+            {let ison = absettings("negativegenes");
+            let check = document.createElement("input");
+            check.type = "checkbox";
+            check.id = "negativegenes-check-menu";
+            check.checked = ison;
+            check.addEventListener("change",(e)=>{
+                absettings("negativegenes",true,e.target.checked);
+                ison=e.target.checked;
+            });
+            let label = document.createElement("label");
+            label.innerText = "Negative Genes in Gene Creation";
+            label.classList.add("hoverpointer");
+            label.setAttribute("for","negativegenes-check-menu");
+            card.appendChild(label);
+            card.appendChild(check);
+            card.appendChild(document.createElement("br"));}
+
 
             let hardresetbtn = document.createElement("button");
             hardresetbtn.innerText = "Hard Reset";
@@ -1113,8 +1137,10 @@ function start() {
             resetbtn.addEventListener("click",()=>{
                 absettings("displaytopimgs",true,defaultsettings.displaytopimgs);
                 absettings("displaylikes",true,defaultsettings.displaylikes);
-                document.getElementById("displaytopimgs-check-menu").checked=defaultsettings.displaytopimgs
-                document.getElementById("displaylikes-check-menu").checked=defaultsettings.displaylikes
+                absettings("negativegenes",true,defaultsettings.negativegenes);
+                document.getElementById("displaytopimgs-check-menu").checked=defaultsettings.displaytopimgs;
+                document.getElementById("displaylikes-check-menu").checked=defaultsettings.displaylikes;
+                document.getElementById("negativegenes-check-menu").checked=defaultsettings.negativegenes;
             })
             card.appendChild(resetbtn);
             
@@ -1719,12 +1745,14 @@ function enabledarkmode(){
     sheet = element.sheet;
     sheet.insertRule(".dropdown-content a,*,a,.header_option{color:#898989;}", sheet.cssRules.length);
     sheet.insertRule("#togglebtnslider span,.recent-tag,#image-tag-popup,.social,.notification,body,.modal-content{background:"+color+" !important;}", sheet.cssRules.length);
-    sheet.insertRule("#togglebtnslider,.abpnotification,.container,.text-container-inner,#image-group-selector,.model, .method,.button-group .option.selected,.card,.text-imagecontainer-inner,.dropdown-content,.taginfo,.usergene-info,.gene_controller,.user-pill,.header{background:"+shadeColor(color,-70)+" !important;}", sheet.cssRules.length);
+    sheet.insertRule("#gene-preview,.flex-container-inner,#togglebtnslider,.abpnotification,.container,.text-container-inner,#image-group-selector,.model, .method,.button-group .option.selected,.card,.text-imagecontainer-inner,.dropdown-content,.taginfo,.usergene-info,.gene_controller,.user-pill,.header{background:"+shadeColor(color,-70)+" !important;}", sheet.cssRules.length);
     sheet.insertRule(".image-tag,select,#preview,input,.button-group .option{background:#333;}", sheet.cssRules.length);
     sheet.insertRule(".gene_controller img{background:#999; border-radius:5px}", sheet.cssRules.length);
     sheet.insertRule("img[src='/image/loading_spinner.gif']{filter: invert(100%);}", sheet.cssRules.length)
     sheet.insertRule("#image-tag-popup input[type='text']{background:black !important;}",sheet.cssRules.length)
     sheet.insertRule(".repeat,.taginfo img,.user-links img{filter: drop-shadow(0px 0px 1px rgba(255, 255, 255, 1.0)) drop-shadow(0px 0px 4px rgba(255, 255, 255, 0.75)); background: none !important;}",sheet.cssRules.length)
+    sheet.insertRule(".gene_controller{border:1px solid black}",sheet.cssRules.length);
+    sheet.insertRule(".gene_controller input.number_input{filter:invert()}",sheet.cssRules.length);
 }
 
 function changedarkmode(element=null){
