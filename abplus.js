@@ -11,6 +11,9 @@ let defaultsettings = {
     sliderform:"normal",
     convertslider:false,
     negativegenes:true,
+    blockedtags:[],
+    blocktagtimeout:600000,
+    blocktagmaximgs:33,
 }
 { // check default 
     let settings =  JSON.parse(localStorage.getItem("abplus-settings"));
@@ -30,19 +33,6 @@ let defaultsettings = {
             }
         }
         localStorage.setItem("abplus-settings",JSON.stringify(settings));
-    }
-    // clear old localstorage entries
-    let dm = localStorage.getItem("darkmode");
-    if(dm){
-        console.log("old localStorage data detected ! Transferring to new one")
-        absettings("darkmode",true,JSON.parse(dm));
-        localStorage.removeItem("darkmode");
-    }
-    let dmc = localStorage.getItem("darkmode-color");
-    if(dmc){
-        console.log("old localStorage data detected ! Transferring to new one")
-        absettings("darkmodecolor",true,JSON.parse(dmc));
-        localStorage.removeItem("darkmode-color");
     }
 }
 
@@ -117,6 +107,44 @@ let Noo= {
     }
 }
 
+var tagblocker= {
+
+    checkloop:null,
+    currentblocks:null,
+    timeoutlength:600000,
+
+    start(){
+        let settings = absettings("all");
+        tagblocker.currentblocks=settings.blockedtags;
+        tagblocker.timeoutlength=settings.blocktagtimeout;
+    },
+
+    startcheck(){
+        setTimeout(() => {tagblocker.checkloop = setInterval(tagblocker.checktimeouts, 5000)}, 100);
+    },
+
+    stopcheck(){
+        clearInterval(tagblocker.checkloop);
+    },
+
+    checktimeouts(){
+        tagblocker.currentblocks.forEach(e=>{
+            if(e.timeout-Date.now()<=0){
+                tagblockimages(e.tag);
+                let savedblock=absettings("blockedtags");
+                let tagindex = savedblock.findIndex(tagobj=>e.tag===tagobj.tag);
+                if(tagindex!=-1){
+                    savedblock[tagindex].timeout=Date.now()+tagblocker.timeoutlength;
+                    absettings("blockedtags",true,savedblock);
+                    tagblocker.currentblocks=savedblock;
+                }  
+                
+            }
+        })
+    }
+}
+
+
 const reqheader = {
     "Accept": "application/json",
     "Content-Type": "application/json",
@@ -124,7 +152,6 @@ const reqheader = {
 
 
 start();
-
 
 function addclickEvent(){
     let imageContainer = Imo.imagecontainer;
@@ -147,6 +174,7 @@ function addclickEvent(){
 function removeblockedimgs(){
     let savedblock = JSON.parse(localStorage.getItem("abplus-blocked"));
     let savedblockimg = JSON.parse(localStorage.getItem("abplus-blocked-img"));
+    let savedblocktagimg = JSON.parse(localStorage.getItem("abplus-blocked-tag-img"));
     if(savedblock.includes(USER)){
         console.log("stopped blocking images by "+USER+ " temporary. User is on their profile page.");
         return;
@@ -155,7 +183,7 @@ function removeblockedimgs(){
     let images = imageContainer.childNodes;
     let deletecount=0;
     let canblockimgs = absettings("imgblocks");
-    for (let i = 0; i < images.length; i++) {
+    imgloop:for (let i = 0; i < images.length; i++) {
         if(images[i].lastChild==null||images[i].style.display==="none"){
             continue;
         }
@@ -175,11 +203,19 @@ function removeblockedimgs(){
             images[i].prepend(x);
         }
         
-        if(savedblockimg.includes(images[i].getAttribute("data-key"))&&canblockimgs){
+        if(canblockimgs&&savedblockimg.includes(images[i].getAttribute("data-key"))){
             images[i].style.display =" none";
             deletecount++;
             continue;
         }
+        for(let i2 =0;i2<savedblocktagimg.length;i2++){
+            if(savedblocktagimg[i2].imgs.includes(images[i].getAttribute("data-key"))){
+                images[i].style.display =" none";
+                deletecount++;
+            }
+            continue imgloop; //ignore this
+        };
+        
         let imgowner = images[i].querySelector("a.creator_name").innerText;
         if(savedblock.includes(imgowner)){
             images[i].style.display =" none";
@@ -383,6 +419,10 @@ function start() {
 
     if(localStorage.getItem("abplus-blocked-img")==null){
         localStorage.setItem("abplus-blocked-img",JSON.stringify([]));
+    }
+
+    if(localStorage.getItem("abplus-blocked-tag-img")==null){
+        localStorage.setItem("abplus-blocked-tag-img",JSON.stringify([]));
     }
 
     // topimgs thing
@@ -611,8 +651,8 @@ function start() {
     });
     //
 
-    let notibtn = document.querySelector(".notifications").firstChild;
-    if(notibtn!=null){
+    let notibtn = document.querySelector(".notifications");
+    if(notibtn&&notibtn.firstChild!=null){
         let link = document.createElement("a");
         link.href="/abpnotifications";
         link.classList.add("invislinkabp");
@@ -730,6 +770,9 @@ function start() {
     // ab+ page
     if(USER=="artbreederplus"){
         cleanpage();
+        abpdiv = document.createElement("div");
+        abpdiv.classList.add("abp-center");
+        document.body.appendChild(abpdiv);
 
         {//title
             titlediv = document.createElement("div");
@@ -738,7 +781,7 @@ function start() {
             title.classList.add("inline");
             title.innerText="Artbreeder+ Settings";
             titlediv.appendChild(title);
-            document.body.appendChild(titlediv);
+            abpdiv.appendChild(titlediv);
         }
         //first card darkmode
         {
@@ -763,7 +806,7 @@ function start() {
             })
 
             let text = document.createElement("span");
-            text.innerText="custom darkmode color: ";
+            text.innerText="Custom Darkmode Color: ";
             let title = document.createElement("h3");
             title.innerText ="Darkmode Settings";
             title.style.marginTop ="0px";
@@ -820,8 +863,8 @@ function start() {
             card.appendChild(document.createElement("br"));
             card.appendChild(reset);
 
-            document.body.appendChild(div);
-            document.body.appendChild(document.createElement("br"));
+            abpdiv.appendChild(div);
+            abpdiv.appendChild(document.createElement("br"));
         }
         // 2nd card //blocked users
         {
@@ -839,33 +882,8 @@ function start() {
             card.appendChild(title);
             card.appendChild(document.createElement("hr"));
 
-            let ison = absettings("blocknoti");
-            let check = document.createElement("input");
-            check.type = "checkbox";
-            check.id = "blocknoti-check-menu";
-            check.checked = ison;
-            check.addEventListener("change",(e)=>{
-                absettings("blocknoti",true,e.target.checked);
-                ison=e.target.checked;
-                if(ison){
-                    let notic = document.getElementById("notification_container");
-                    if(notic!=null){
-                        Noo.noticontainer = notic;
-                        Noo.stopcheck();
-                        Noo.startcheck();
-                    }
-                }else{
-                    Noo.startcheck();
-                }
-            });
-            let label = document.createElement("label");
-            label.innerText = "Block Notifications ";
-            label.classList.add("hoverpointer");
-            label.setAttribute("for","blocknoti-check-menu");
-            card.appendChild(label);
-            card.appendChild(check);
-            card.appendChild(document.createElement("br"));
             
+            //image block
             
             let blockedimgscount = document.createElement("h4");
             let clearimgblockbtn = document.createElement("button");
@@ -917,7 +935,9 @@ function start() {
             }
             card.appendChild(clearimgblockbtn);
 
-            
+            card.appendChild(document.createElement("hr"));
+
+            // user block   
             let blocked = JSON.parse(localStorage.getItem("abplus-blocked"));
             
             let blockedusertitle = document.createElement("h4");
@@ -926,8 +946,6 @@ function start() {
             blockedusertitle.style.marginTop="2rem";
             blockedusertitle.id="abpblockedtitle";
             card.appendChild(blockedusertitle);
-
-
 
             let list = document.createElement("ul");
             list.style.height =" 200px";
@@ -947,7 +965,7 @@ function start() {
             let blockbtn = document.createElement("button");
             blockbtn.innerText = "Block User";
             blockbtn.classList.add("primary_button");
-            blockbtn.addEventListener("click",()=>{
+            blockbtn.onclick=()=>{
                 if(!blockfield.value){
                     alert("please enter a valid user name !");
                     return;
@@ -962,9 +980,8 @@ function start() {
                 blocked.push(blockfield.value);
                 localStorage.setItem("abplus-blocked",JSON.stringify(blocked));
                 addblockelement(blockfield.value,list);
-                blockedusertitle.innerText = "Blocked Users ("+list.children.length +")";
                 blockfield.value="";
-            })
+            };
             blockdiv.appendChild(blockfield);
             blockdiv.appendChild(blockbtn);
 
@@ -975,7 +992,7 @@ function start() {
             download.onclick=()=>{
                 let tocopy = JSON.parse(localStorage.getItem("abplus-blocked"));
                 navigator.clipboard.writeText(tocopy);
-                alert("The block list : "+tocopy + " , has been copied to your clipboard!");
+                alert("The block list \n\n"+tocopy + "\n\n has been copied to your clipboard!");
             }
             blockdiv.appendChild(download);
 
@@ -991,7 +1008,6 @@ function start() {
                 data.forEach(block => {
                     addblockelement(block, list);
                 });
-                blockedusertitle.innerText = "Blocked Users ("+list.children.length +")";
 
             }
             blockdiv.appendChild(upload);
@@ -1013,12 +1029,150 @@ function start() {
 
             
             card.appendChild(list);
-            card.appendChild(document.createElement("hr"));
-            card.appendChild(document.createElement("br"));
             card.appendChild(blockdiv);
+            card.appendChild(document.createElement("br"));
+            //noti block
+            {let ison = absettings("blocknoti");
+            let check = document.createElement("input");
+            check.type = "checkbox";
+            check.id = "blocknoti-check-menu";
+            check.checked = ison;
+            check.addEventListener("change",(e)=>{
+                absettings("blocknoti",true,e.target.checked);
+                ison=e.target.checked;
+                if(ison){
+                    let notic = document.getElementById("notification_container");
+                    if(notic!=null){
+                        Noo.noticontainer = notic;
+                        Noo.stopcheck();
+                        Noo.startcheck();
+                    }
+                }else{
+                    Noo.startcheck();
+                }
+            });
+            let label = document.createElement("label");
+            label.innerText = "Block Notifications Of Blocked User";
+            label.classList.add("hoverpointer");
+            label.setAttribute("for","blocknoti-check-menu");
+            card.appendChild(label);
+            card.appendChild(check);}
 
-            document.body.appendChild(div);
-            document.body.appendChild(document.createElement("br"));
+            card.appendChild(document.createElement("hr"));
+
+            //tag block
+
+            blockedtags = absettings("blockedtags");
+
+            let blockedtagtitle = document.createElement("h4");
+            blockedtagtitle.innerText = "Blocked Tags ("+blockedtags.length +")";
+            blockedtagtitle.style.marginBottom="0px";
+            blockedtagtitle.style.marginTop="2rem";
+            blockedtagtitle.id="abpblockedtagtitle";
+            card.appendChild(blockedtagtitle);
+
+            let taglist = document.createElement("ul");
+            taglist.style.height =" 200px";
+            taglist.style.overflowY = "auto";
+            taglist.style.border = "1px solid grey";
+            blockedtags.forEach(block => {
+                addtagblockelement(block, taglist);
+            });
+            card.appendChild(taglist);
+
+            tagblockdiv = blockdiv.cloneNode(true);
+            card.appendChild(tagblockdiv);
+            tagblockdiv.childNodes[0].placeholder="tag name";
+            tagblockdiv.childNodes[1].innerText=" Block Tag";
+            tagblockdiv.childNodes[1].onclick=()=>{
+                let tagtoblock=tagblockdiv.childNodes[0].value;
+                if(!tagtoblock){
+                    alert("please enter a valid user name !");
+                    return;
+                }
+                let blocked = [];
+                let savedblocks=absettings("blockedtags");
+                if(savedblocks!=null){blocked=savedblocks}
+                if(blocked.findIndex(tagobj=>tagobj.tag===tagtoblock)!=-1){
+                    alert("tag is already blocked!");
+                    return;
+                }
+                let blockobj = {tag:tagtoblock,count:null,timeout:Date.now()+tagblocker.timeoutlength};
+                blocked.push(blockobj);
+                absettings("blockedtags",true,blocked);
+                let blocke = addtagblockelement(blockobj,taglist);
+                tagblockdiv.childNodes[0].value="";
+                tagblockimages(tagtoblock).then(()=>{
+                    let savedblock=absettings("blockedtags");
+                    let tagindex = savedblock.findIndex(tagobj=>tagtoblock===tagobj.tag);
+                    if(tagindex!=-1){
+                        blocke.firstChild.innerHTML = "name: "+tagtoblock+ "&emsp;| imgs: "+ savedblock[tagindex].count +" &emsp;| next update: "+ ((savedblock[tagindex].timeout-Date.now())/60000).toFixed(2)+ " mins";
+                    } 
+                });
+            };
+            tagblockdiv.childNodes[2].onclick=()=>{
+                let tocopy = absettings("blockedtags");
+                navigator.clipboard.writeText(tocopy);
+                alert("The tag block list \n\n "+tocopy + "\n\n has been copied to your clipboard!");
+            }
+            tagblockdiv.childNodes[3].onclick=()=>{
+                let data = (prompt("Please paste your data in:")).split(",");
+                absettings("blockedtags",true,data);
+                while (taglist.hasChildNodes()) {  
+                    taglist.removeChild(taglist.firstChild);
+                }
+                data.forEach(block => {
+                    addtagblockelement(block, taglist);
+                });
+
+            }
+            tagblockdiv.childNodes[4].onclick=()=>{
+                let data = [];
+                while (taglist.hasChildNodes()) {  
+                    taglist.removeChild(taglist.firstChild);
+                }
+                blockedtagtitle.innerText = "Blocked Tags ("+taglist.children.length +")";
+                absettings("blockedtags",true,data);
+            }
+
+            card.appendChild(document.createElement("br"));
+            //max img blocks
+            {let value = absettings("blocktagmaximgs");
+            let numin = document.createElement("input");
+            numin.type = "number";
+            numin.value = value;
+            numin.onchange=(e)=>{
+                if(e.target.value<5){e.target.value=5;return;}
+                if(e.target.value>100){e.target.value=100;return;}
+                absettings("blocktagmaximgs",true,e.target.value);
+            };
+            let label = document.createElement("label");
+            label.innerText = "Tag-Block Max Images: ";
+            label.classList.add("hoverpointer");
+            card.appendChild(label);
+            card.appendChild(numin);
+            card.appendChild(document.createElement("br"));}
+            //timeout 
+            {let value = absettings("blocktagtimeout");
+            let numin = document.createElement("input");
+            numin.type = "number";
+            numin.value = value/60000;
+            numin.placeholder="number in minutes";
+            numin.onchange=(e)=>{
+                if(e.target.value<.1){e.target.value=0.1;return;}
+                if(e.target.value>999){e.target.value=999;return;}
+                absettings("blocktagtimeout",true,e.target.value*60000);
+                tagblocker.timeoutlength=e.target.value*60000;
+            };
+            let label = document.createElement("label");
+            label.innerText = "Tag-Block Timeout (minutes) : ";
+            label.classList.add("hoverpointer");
+            card.appendChild(label);
+            card.appendChild(numin);
+            card.appendChild(document.createElement("br"));}
+
+            abpdiv.appendChild(div);
+            abpdiv.appendChild(document.createElement("br"));
         }
         // 3rd card other settings
         {
@@ -1146,8 +1300,8 @@ function start() {
             
             
 
-            document.body.appendChild(div);
-            document.body.appendChild(document.createElement("br"));
+            abpdiv.appendChild(div);
+            abpdiv.appendChild(document.createElement("br"));
 
         }
 
@@ -1232,8 +1386,8 @@ function start() {
             
             
 
-            document.body.appendChild(div);
-            document.body.appendChild(document.createElement("br"));
+            abpdiv.appendChild(div);
+            abpdiv.appendChild(document.createElement("br"));
 
         }
 
@@ -1322,8 +1476,8 @@ function start() {
             card.appendChild(document.createElement("hr"));
             card.appendChild(document.createElement("br"));
 
-            document.body.appendChild(div);
-            document.body.appendChild(document.createElement("br"));
+            abpdiv.appendChild(div);
+            abpdiv.appendChild(document.createElement("br"));
         }
         // 4th card stats
 
@@ -1362,8 +1516,8 @@ function start() {
             card.appendChild(document.createElement("br"));
             card.appendChild(resetbtn);
 
-            document.body.appendChild(div);
-            document.body.appendChild(document.createElement("br"));
+            abpdiv.appendChild(div);
+            abpdiv.appendChild(document.createElement("br"));
         }
         // 5th card info
 
@@ -1404,8 +1558,8 @@ function start() {
             card.appendChild(document.createElement("br"));
             card.appendChild(discord);
             card.appendChild(document.createElement("br"));
-            document.body.appendChild(div);
-            document.body.appendChild(document.createElement("br"));
+            abpdiv.appendChild(div);
+            abpdiv.appendChild(document.createElement("br"));
 
         }
     }
@@ -1415,25 +1569,72 @@ function start() {
         blockeduser.classList.add("blockeduser");
         let blockname = document.createElement("span");
         blockname.innerText = block;
-        blockname.addEventListener("click",()=>{
-            window.open("/"+blockname.innerText); 
-        })
+        blockname.onclick=()=>{
+            window.open("/"+block); 
+        };
+        
         let removebtn = document.createElement("button");
         removebtn.innerText = "X";
-        removebtn.addEventListener("click", () => {
+        removebtn.onclick=()=>{
             let savedblock = JSON.parse(localStorage.getItem("abplus-blocked"));
-            let userindex = savedblock.findIndex(user=>blockname.innerText===user);
+            let userindex = savedblock.findIndex(user=>block===user);
             if(userindex!=-1){
                 savedblock.splice(userindex,1);
             }
             localStorage.setItem("abplus-blocked",JSON.stringify(savedblock));
             blockeduser.remove();
             document.getElementById("abpblockedtitle").innerText = "Blocked Users ("+list.children.length +")";
-
-        });
+        };
         blockeduser.appendChild(blockname);
         blockeduser.appendChild(removebtn);
         list.appendChild(blockeduser);
+    }
+
+    function addtagblockelement(block, list) {
+        let blockeduser = document.createElement("li");
+        blockeduser.classList.add("blockeduser");
+        let blockname = document.createElement("span");
+        blockname.innerHTML = "name: "+block.tag+ "&emsp;| imgs: "+ block.count +" &emsp;| next update: "+ ((block.timeout-Date.now())/60000).toFixed(2)+ " mins";
+        blockname.onclick=()=>{
+            tagblockimages(block.tag).then(()=>{
+                let savedblock=absettings("blockedtags");
+                let tagindex = savedblock.findIndex(tagobj=>block.tag===tagobj.tag);
+                if(tagindex!=-1){
+                    savedblock[tagindex].timeout=Date.now()+tagblocker.timeoutlength;
+                    absettings("blockedtags",true,savedblock);
+                    blockname.innerHTML = "name: "+block.tag+ "&emsp;| imgs: "+ savedblock[tagindex].count +" &emsp;| next update: "+ ((savedblock[tagindex].timeout-Date.now())/60000).toFixed(2)+ " mins";
+                } 
+            });
+             
+        }
+
+        let removebtn = document.createElement("button");
+        removebtn.innerText = "X";
+
+        removebtn.onclick=()=>{
+            let savedblock=absettings("blockedtags");
+            let tagindex = savedblock.findIndex(tagobj=>block.tag===tagobj.tag);
+            if(tagindex!=-1){
+                savedblock.splice(tagindex,1);
+            }
+            absettings("blockedtags",true,savedblock);
+            tagblocker.currentblocks=savedblock;
+            let tagimgblocks = JSON.parse(localStorage.getItem("abplus-blocked-tag-img"));
+            let tagindex2 = tagimgblocks.findIndex(e=>block.tag===e.tag);
+            if(tagindex2!=-1){
+                tagimgblocks.splice(tagindex2,1);
+            }
+            localStorage.setItem("abplus-blocked-tag-img",JSON.stringify(tagimgblocks));
+            
+            blockeduser.remove();
+            document.getElementById("abpblockedtagtitle").innerText = "Blocked Tag ("+list.children.length +")";
+        };
+        
+        blockeduser.appendChild(blockname);
+        blockeduser.appendChild(removebtn);
+        list.appendChild(blockeduser);
+
+        return blockeduser;
     }
 
 
@@ -1533,6 +1734,10 @@ function start() {
         Noo.noticontainer = notic;
         Noo.startcheck();
     }
+
+    //tag blocker
+    tagblocker.start();
+    tagblocker.startcheck();
 
     let imagescontainer;
     if(USER=="browse"||USER=="i"||urlsplit[urlsplit.length-2]=="compose"){
@@ -2119,3 +2324,46 @@ function cleanpage(){
         }while(repeat);
 }
 
+function tagblockimages(tag){
+    return new Promise((resolve,reject)=>{
+        let PARA = {};
+        PARA.method="POST"
+        PARA.headers=reqheader;
+        PARA.body=JSON.stringify({
+            tags:[tag],
+            tag_search_type:"substring",
+            models:"all",
+            offset:0,
+            limit:absettings("blocktagmaximgs"),
+            order_by:null
+        });
+        fetch("https://www.artbreeder.com/images",PARA)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error("HTTP error " + response.status);
+            }
+            return response.json();
+        })
+        .then(data=>{
+            let blocks = JSON.parse(localStorage.getItem("abplus-blocked-tag-img"));
+            let tagindex = blocks.findIndex(e=>tag===e.tag);
+            if(tagindex==-1){
+                blocks.push({tag:tag,imgs:[]});
+                data.forEach(e=>{blocks[blocks.length-1].imgs.push(e.key);});
+            }else{
+                data.forEach(e=>{blocks[tagindex].imgs.push(e.key);});
+            }
+            localStorage.setItem("abplus-blocked-tag-img",JSON.stringify(blocks));
+    
+            let tagblocks = absettings("blockedtags");
+            let i = tagblocks.findIndex(e=>tag===e.tag);
+            if(i!=-1){
+                tagblocks[i].count=data.length;
+            }
+            absettings("blockedtags",true,tagblocks);
+            resolve();
+        })
+        .catch(err=>{console.error(err);reject();});
+    });
+    
+}

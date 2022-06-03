@@ -1,3 +1,7 @@
+body{
+    background-color: #E6EBF1;
+}
+
 .header a.logo span {
     transition: color .5s
 }
@@ -30,17 +34,8 @@
     background: red;
 }
 
-.card {
-    width: 500px;
-    background-color: white;
-    box-shadow: 0 4px 4px 0 rgba(0, 0, 0, 0.1);
-    border-radius: 5px;
-    padding: 20px;
-}
-
 .row_element {
     display: inline-block;
-    max-width: 450px;
 }
 
 /* blockeduserlist */
@@ -50,6 +45,7 @@
     list-style-type: none;
     background: rgba(67, 64, 64, 0.58);
     margin: 1rem;
+    border-radius: 6px;
 }
 
 .blockeduser button {
@@ -219,6 +215,22 @@
     top: 0px;
     left: 0px;
 }
+
+.abp-center{
+    margin: auto;
+    width:75%;
+    min-width: 550px;
+    max-width: 800px;
+}
+
+.card{
+    width: 100%;
+    background-color: #dedede;
+    box-shadow: 0 4px 4px 0 rgba(0, 0, 0, 0.1);
+    border-radius: 5px;
+    padding: 20px;
+}
+
 
 /* toggle button slider */
 #togglebtnslider {
