@@ -45,6 +45,7 @@ let USER;
 let urlsplit = window.location.pathname.split("/");
 USER = urlsplit[urlsplit.length-1];
 let requestingnotif=false;
+let winId = Date.now(); 
 
 let Imo= {
 
@@ -120,7 +121,7 @@ var tagblocker= {
     },
 
     startcheck(){
-        setTimeout(() => {tagblocker.checkloop = setInterval(tagblocker.checktimeouts, 5000)}, 100);
+        setTimeout(() => {tagblocker.checkloop = setInterval(tagblocker.checktimeouts, 10000)}, 100);
     },
 
     stopcheck(){
@@ -128,19 +129,26 @@ var tagblocker= {
     },
 
     checktimeouts(){
-        tagblocker.currentblocks.forEach(e=>{
-            if(e.timeout-Date.now()<=0){
-                tagblockimages(e.tag);
-                let savedblock=absettings("blockedtags");
-                let tagindex = savedblock.findIndex(tagobj=>e.tag===tagobj.tag);
-                if(tagindex!=-1){
-                    savedblock[tagindex].timeout=Date.now()+tagblocker.timeoutlength;
-                    absettings("blockedtags",true,savedblock);
-                    tagblocker.currentblocks=savedblock;
-                }  
-                
-            }
-        })
+        let currentmain = JSON.parse(localStorage.getItem("abplus-main-win")); // to make sure only one window updates the blocks
+        if(currentmain.id===winId||currentmain.time-Date.now()<-20000){
+            localStorage.setItem("abplus-main-win",JSON.stringify({id:winId,time:Date.now()}));
+            tagblocker.currentblocks.forEach(e=>{
+                if(e.timeout-Date.now()<=0){
+                    let savedblock=absettings("blockedtags");
+                    let tagindex = savedblock.findIndex(tagobj=>e.tag===tagobj.tag);
+                    if(tagindex!=-1){
+                        tagblockimages(e.tag);
+                        savedblock[tagindex].timeout=Date.now()+tagblocker.timeoutlength;
+                        absettings("blockedtags",true,savedblock);
+                        tagblocker.currentblocks=savedblock;
+                    }  
+                    
+                }
+            })
+        }else{
+            console.log("not main window " +winId);
+        }
+        
     }
 }
 
@@ -423,6 +431,10 @@ function start() {
 
     if(localStorage.getItem("abplus-blocked-tag-img")==null){
         localStorage.setItem("abplus-blocked-tag-img",JSON.stringify([]));
+    }
+
+    if(localStorage.getItem("abplus-main-win")==null){
+        localStorage.setItem("abplus-main-win",JSON.stringify({id:0,time:0}));
     }
 
     // topimgs thing
