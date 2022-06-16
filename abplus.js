@@ -220,8 +220,8 @@ function removeblockedimgs(){
             if(savedblocktagimg[i2].imgs.includes(images[i].getAttribute("data-key"))){
                 images[i].style.display =" none";
                 deletecount++;
+                continue imgloop; //ignore this
             }
-            continue imgloop; //ignore this
         };
         
         let imgowner = images[i].querySelector("a.creator_name").innerText;
@@ -663,7 +663,7 @@ function start() {
     });
     //
 
-    let notibtn = document.querySelector(".notifications");
+    let notibtn = document.querySelector(".notifications .dropdown-button");
     if(notibtn&&notibtn.firstChild!=null){
         let link = document.createElement("a");
         link.href="/abpnotifications";
@@ -2358,6 +2358,8 @@ function tagblockimages(tag){
         })
         .then(data=>{
             let blocks = JSON.parse(localStorage.getItem("abplus-blocked-tag-img"));
+            let tagblocks = absettings("blockedtags");
+
             let tagindex = blocks.findIndex(e=>tag===e.tag);
             if(tagindex==-1){
                 blocks.push({tag:tag,imgs:[]});
@@ -2365,9 +2367,10 @@ function tagblockimages(tag){
             }else{
                 data.forEach(e=>{blocks[tagindex].imgs.push(e.key);});
             }
+            blocks = blocks.filter(e=>tagblocks.some(e2=>e2.tag===e.tag));
+
             localStorage.setItem("abplus-blocked-tag-img",JSON.stringify(blocks));
     
-            let tagblocks = absettings("blockedtags");
             let i = tagblocks.findIndex(e=>tag===e.tag);
             if(i!=-1){
                 tagblocks[i].count=data.length;
