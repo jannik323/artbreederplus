@@ -1,16 +1,17 @@
 {
     "manifest_version": 2,
     "name": "AB+",
-    "version": "10.2",
+    "version": "11",
     "description": "Enhance your Artbreeder.com experience !",
     "icons": {
       "48": "icons/favicon.png"
     },
     "content_scripts": [
       {
-        "matches": ["*://*.artbreeder.com/*"],
-        "js": ["abplus.js"],
-        "css": ["abplus.css"]
+        "matches": ["*://www.artbreeder.com/*"],
+        "js": ["/js/inject.js"],
+        "css": ["/css/abplus.css"]
       }
-    ]
+    ],
+    "web_accessible_resources" : ["/js/abplus.js"]
   }
