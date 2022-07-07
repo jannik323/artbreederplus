@@ -1,4 +1,4 @@
-(()=>{
+// (()=>{
     
 // I just wanna say ... I know its not pretty
 // and most of the code isn't efficient
@@ -33,6 +33,9 @@ let requestingnotif=false;
 
 // for the automatic tag blocking updating 
 const abpWinId = Date.now(); 
+
+//defaulting or updating abp settings localstorage
+checkAbpSettings();
 
 // image observer
 const Imo= {
@@ -143,8 +146,6 @@ const tagblocker= {
                     
                 }
             })
-        }else{
-            console.log("not main window " +abpWinId);
         }
         
     }
@@ -158,9 +159,6 @@ const reqheader = {
 
 //main function
 function start(){
-
-    //defaulting or updating abp settings localstorage
-    checkAbpSettings();
 
     if(absettings("darkmode")){
         enabledarkmode();
@@ -1095,7 +1093,7 @@ function privateimages(isprivate=true){
 }
 
 // change a tag from a specified img
-function changetag(key="507880370586758c859d2a199847",tag="test",remove=false){
+function changetag(key,tag,remove=false){
     let PARA;
     let URL = "https://www.artbreeder.com/add_tag";
     if(remove){
@@ -2529,4 +2527,4 @@ function createAbpPage(absettingsTemp) {
 // starttttttt yeee here and away we goo
 start();
 
-})();
+// })();
