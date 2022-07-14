@@ -9,11 +9,11 @@ function injectScript(file, node) {
 if(document.querySelector("#abp-script")==null){
 
     let data =document.createElement("data");
-    data.value=browser.runtime.getManifest().version;
+    data.value=chrome.runtime.getManifest().version;
     data.id="abp-version";
     document.head.appendChild(data);
 
-    injectScript( browser.runtime.getURL("js/abplus.js"), "head");
+    injectScript( chrome.runtime.getURL("js/abplus.js"), "head");
 }else{
     if(confirm("AB+ has been reloaded. You might have to reload the page to make changes effective !")){
         location.reload();
