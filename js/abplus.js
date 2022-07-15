@@ -792,17 +792,18 @@ function removeblockedimgs(){
     let deletecount=0;
     let canblockimgs = absettings("imgblocks");
     imgloop:for (let i = 0; i < images.length; i++) {
-        if(images[i].lastChild==null||images[i].style.display==="none"){
+        let ikey = images[i].getAttribute("data-key"); 
+        if(images[i].lastChild==null||images[i].style.display==="none"||ikey==null){
             continue;
         }
         
-        if(canblockimgs&&savedblockimg.includes(images[i].getAttribute("data-key"))){
+        if(canblockimgs&&savedblockimg.includes()){
             images[i].style.display =" none";
             deletecount++;
             continue;
         }
         for(let i2 =0;i2<savedblocktagimg.length;i2++){
-            if(savedblocktagimg[i2].imgs.includes(images[i].getAttribute("data-key"))){
+            if(savedblocktagimg[i2].imgs.includes(ikey)){
                 images[i].style.display =" none";
                 deletecount++;
                 continue imgloop; //ignore this

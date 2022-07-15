@@ -1,7 +1,7 @@
 {
     "manifest_version": 2,
     "name": "AB+",
-    "version": "11.2",
+    "version": "11.3",
     "description": "Enhance your Artbreeder.com experience !",
     "icons": {
       "48": "icons/favicon.png"
